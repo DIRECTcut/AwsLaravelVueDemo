@@ -8,7 +8,9 @@ use App\Contracts\Aws\TextAnalysisServiceInterface;
 use App\Contracts\Repositories\DocumentRepositoryInterface;
 use App\Repositories\DocumentRepository;
 use App\Services\Aws\S3StorageService;
+use App\Services\Aws\TextractService;
 use Aws\S3\S3Client;
+use Aws\Textract\TextractClient;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -37,17 +39,22 @@ class AppServiceProvider extends ServiceProvider
             );
         });
         
-        // AWS service bindings (placeholder implementations)
-        $this->app->singleton(DocumentAnalysisServiceInterface::class, function () {
-            // TODO: Implement actual Textract service
-            return new class implements DocumentAnalysisServiceInterface {
-                public function startDocumentTextDetection(string $s3Key, string $s3Bucket): string { return 'job-123'; }
-                public function getDocumentTextDetectionResults(string $jobId): ?array { return null; }
-                public function detectDocumentText(string $s3Key, string $s3Bucket): array { return ['Blocks' => []]; }
-                public function analyzeDocument(string $s3Key, string $s3Bucket, array $featureTypes = ['FORMS', 'TABLES']): array { return ['Blocks' => []]; }
-                public function startDocumentAnalysis(string $s3Key, string $s3Bucket, array $featureTypes = ['FORMS', 'TABLES']): string { return 'job-456'; }
-                public function getDocumentAnalysisResults(string $jobId): ?array { return null; }
-            };
+        // AWS Textract Service
+        $this->app->singleton(TextractClient::class, function () {
+            return new TextractClient([
+                'version' => 'latest',
+                'region' => config('filesystems.disks.s3.region'),
+                'credentials' => [
+                    'key' => config('filesystems.disks.s3.key'),
+                    'secret' => config('filesystems.disks.s3.secret'),
+                ],
+            ]);
+        });
+        
+        $this->app->singleton(DocumentAnalysisServiceInterface::class, function ($app) {
+            return new TextractService(
+                $app->make(TextractClient::class)
+            );
         });
         
         $this->app->singleton(TextAnalysisServiceInterface::class, function () {

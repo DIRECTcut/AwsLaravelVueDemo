@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'aws' => [
+        'textract' => [
+            'notification_role_arn' => env('AWS_TEXTRACT_ROLE_ARN'),
+            'sns_topic_arn' => env('AWS_TEXTRACT_SNS_TOPIC_ARN'),
+        ],
+        'comprehend' => [
+            'data_access_role_arn' => env('AWS_COMPREHEND_ROLE_ARN'),
+        ],
+    ],
+
 ];
