@@ -7,8 +7,10 @@ use App\Contracts\Aws\StorageServiceInterface;
 use App\Contracts\Aws\TextAnalysisServiceInterface;
 use App\Contracts\Repositories\DocumentRepositoryInterface;
 use App\Repositories\DocumentRepository;
+use App\Services\Aws\ComprehendService;
 use App\Services\Aws\S3StorageService;
 use App\Services\Aws\TextractService;
+use Aws\Comprehend\ComprehendClient;
 use Aws\S3\S3Client;
 use Aws\Textract\TextractClient;
 use Illuminate\Support\ServiceProvider;
@@ -57,18 +59,22 @@ class AppServiceProvider extends ServiceProvider
             );
         });
         
-        $this->app->singleton(TextAnalysisServiceInterface::class, function () {
-            // TODO: Implement actual Comprehend service
-            return new class implements TextAnalysisServiceInterface {
-                public function detectSentiment(string $text, string $languageCode = 'en'): array { return ['Sentiment' => 'NEUTRAL', 'SentimentScore' => ['Neutral' => 0.9]]; }
-                public function detectEntities(string $text, string $languageCode = 'en'): array { return ['Entities' => []]; }
-                public function detectKeyPhrases(string $text, string $languageCode = 'en'): array { return ['KeyPhrases' => []]; }
-                public function detectLanguage(string $text): array { return ['Languages' => [['LanguageCode' => 'en', 'Score' => 0.99]]]; }
-                public function startEntitiesDetectionJob(array $inputDataConfig, array $outputDataConfig, string $dataAccessRoleArn, string $languageCode = 'en'): string { return 'job-789'; }
-                public function startSentimentDetectionJob(array $inputDataConfig, array $outputDataConfig, string $dataAccessRoleArn, string $languageCode = 'en'): string { return 'job-101'; }
-                public function describeEntitiesDetectionJob(string $jobId): array { return ['JobStatus' => 'COMPLETED']; }
-                public function describeSentimentDetectionJob(string $jobId): array { return ['JobStatus' => 'COMPLETED']; }
-            };
+        // AWS Comprehend Service
+        $this->app->singleton(ComprehendClient::class, function () {
+            return new ComprehendClient([
+                'version' => 'latest',
+                'region' => config('filesystems.disks.s3.region'),
+                'credentials' => [
+                    'key' => config('filesystems.disks.s3.key'),
+                    'secret' => config('filesystems.disks.s3.secret'),
+                ],
+            ]);
+        });
+        
+        $this->app->singleton(TextAnalysisServiceInterface::class, function ($app) {
+            return new ComprehendService(
+                $app->make(ComprehendClient::class)
+            );
         });
         
         // Repository bindings
