@@ -3,12 +3,14 @@
 use App\Contracts\Aws\StorageServiceInterface;
 use App\Contracts\Repositories\DocumentRepositoryInterface;
 use App\Exceptions\Aws\StorageException;
+use App\Jobs\ProcessDocumentJob;
 use App\Models\Document;
 use App\Models\User;
 use App\ProcessingStatus;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Mockery;
 
 uses(RefreshDatabase::class);
@@ -41,6 +43,8 @@ describe('Document Index', function () {
 
 describe('Document Upload', function () {
     test('can upload document', function () {
+        Queue::fake();
+        
         $file = UploadedFile::fake()->create('test.pdf', 1024, 'application/pdf');
         $s3Key = 'documents/1/test-uuid.pdf';
         
@@ -69,6 +73,11 @@ describe('Document Upload', function () {
             's3_key' => $s3Key,
             'processing_status' => ProcessingStatus::PENDING->value,
         ]);
+
+        Queue::assertPushed(ProcessDocumentJob::class, function ($job) {
+            $document = Document::where('title', 'Test Document')->first();
+            return $job->getDocumentId() === $document->id;
+        });
     });
     
     test('validates file upload requirements', function () {

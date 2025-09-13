@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Contracts\Aws\StorageServiceInterface;
 use App\Contracts\Repositories\DocumentRepositoryInterface;
 use App\Http\Requests\StoreDocumentRequest;
+use App\Jobs\ProcessDocumentJob;
 use App\ProcessingStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -71,8 +72,8 @@ class DocumentController extends Controller
                 'is_public' => $request->boolean('is_public', false),
                 'uploaded_at' => now(),
             ]);
-            
-            // TODO: Dispatch processing jobs
+
+            ProcessDocumentJob::dispatch($document->id);
             
             return response()->json([
                 'message' => 'Document uploaded successfully',
