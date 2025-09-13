@@ -62,16 +62,31 @@ class ProcessTextractJob implements ShouldQueue
             };
 
             // Store results
+            $metadata = [
+                'processing_time' => now()->diffInSeconds($processingJob->started_at),
+                'aws_request_id' => $results['ResponseMetadata']['RequestId'] ?? null,
+            ];
+
+            // Add partial processing info if present
+            if (isset($results['IsPartial']) && $results['IsPartial']) {
+                $metadata['is_partial'] = true;
+                $metadata['partial_message'] = $results['StatusMessage'] ?? 'Some pages could not be processed';
+                $metadata['warnings'] = $results['Warnings'] ?? [];
+                
+                Log::warning("Textract processing completed with partial results", [
+                    'job_id' => $processingJob->id,
+                    'document_id' => $document->id,
+                    'message' => $metadata['partial_message'],
+                ]);
+            }
+
             DocumentAnalysisResult::create([
                 'document_id' => $document->id,
                 'analysis_type' => $processingJob->job_type,
                 'raw_results' => $results,
                 'processed_data' => $this->processTextractResults($results, $processingJob->job_type),
                 'confidence_score' => $this->calculateAverageConfidence($results),
-                'metadata' => [
-                    'processing_time' => now()->diffInSeconds($processingJob->started_at),
-                    'aws_request_id' => $results['ResponseMetadata']['RequestId'] ?? null,
-                ],
+                'metadata' => $metadata,
             ]);
 
             $processingJob->markAsCompleted($results);

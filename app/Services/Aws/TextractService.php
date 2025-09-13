@@ -84,7 +84,23 @@ class TextractService implements DocumentAnalysisServiceInterface
                 );
             }
 
-            // Job is still IN_PROGRESS or PARTIAL_SUCCESS
+            if ($result['JobStatus'] === 'PARTIAL_SUCCESS') {
+                Log::warning('Textract text detection partially succeeded', [
+                    'job_id' => $jobId,
+                    'status_message' => $result['StatusMessage'] ?? 'Some pages could not be processed',
+                    'warnings' => $result['Warnings'] ?? [],
+                ]);
+
+                // Return the partial results with a flag
+                $partialResults = $this->aggregateAllPages($result, 'getDocumentTextDetection', $jobId);
+                $partialResults['IsPartial'] = true;
+                $partialResults['StatusMessage'] = $result['StatusMessage'] ?? 'Some pages could not be processed';
+                $partialResults['Warnings'] = $result['Warnings'] ?? [];
+                
+                return $partialResults;
+            }
+
+            // Job is still IN_PROGRESS
             return null;
         } catch (AwsException $e) {
             Log::error('Failed to get Textract text detection results', [
@@ -281,7 +297,23 @@ class TextractService implements DocumentAnalysisServiceInterface
                 );
             }
 
-            // Job is still IN_PROGRESS or PARTIAL_SUCCESS
+            if ($result['JobStatus'] === 'PARTIAL_SUCCESS') {
+                Log::warning('Textract analysis partially succeeded', [
+                    'job_id' => $jobId,
+                    'status_message' => $result['StatusMessage'] ?? 'Some pages could not be analyzed',
+                    'warnings' => $result['Warnings'] ?? [],
+                ]);
+
+                // Return the partial results with a flag
+                $partialResults = $this->aggregateAllPages($result, 'getDocumentAnalysis', $jobId);
+                $partialResults['IsPartial'] = true;
+                $partialResults['StatusMessage'] = $result['StatusMessage'] ?? 'Some pages could not be analyzed';
+                $partialResults['Warnings'] = $result['Warnings'] ?? [];
+                
+                return $partialResults;
+            }
+
+            // Job is still IN_PROGRESS
             return null;
         } catch (AwsException $e) {
             Log::error('Failed to get document analysis results', [

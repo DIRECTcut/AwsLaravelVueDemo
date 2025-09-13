@@ -256,6 +256,36 @@ describe('Asynchronous Operations', function () {
         expect($result)->toBeNull();
     });
 
+    test('handles partial success with warnings', function () {
+        $jobId = 'job-abc-123';
+        
+        $this->textractClient->shouldReceive('getDocumentTextDetection')
+            ->once()
+            ->with(['JobId' => $jobId])
+            ->andReturn([
+                'JobStatus' => 'PARTIAL_SUCCESS',
+                'StatusMessage' => 'Some pages could not be processed due to poor quality',
+                'Warnings' => [
+                    ['Page' => 3, 'Code' => 'POOR_QUALITY', 'Message' => 'Page quality too low'],
+                    ['Page' => 5, 'Code' => 'UNSUPPORTED_FORMAT', 'Message' => 'Page format not supported'],
+                ],
+                'Blocks' => [
+                    ['BlockType' => 'LINE', 'Text' => 'Page 1 text'],
+                    ['BlockType' => 'LINE', 'Text' => 'Page 2 text'],
+                    ['BlockType' => 'LINE', 'Text' => 'Page 4 text'], // Page 3 and 5 missing
+                ],
+                'NextToken' => null,
+            ]);
+
+        $result = $this->textractService->getDocumentTextDetectionResults($jobId);
+
+        expect($result)->toBeArray();
+        expect($result['IsPartial'])->toBe(true);
+        expect($result['StatusMessage'])->toBe('Some pages could not be processed due to poor quality');
+        expect($result['Warnings'])->toHaveCount(2);
+        expect($result['Blocks'])->toHaveCount(3);
+    });
+
     test('throws exception when job failed', function () {
         $jobId = 'job-abc-123';
         
