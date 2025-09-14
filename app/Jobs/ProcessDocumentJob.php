@@ -3,10 +3,8 @@
 namespace App\Jobs;
 
 use App\Contracts\Repositories\DocumentRepositoryInterface;
-use App\DocumentType;
-use App\Models\Document;
-use App\Models\DocumentProcessingJob;
 use App\ProcessingStatus;
+use App\Services\Processing\DocumentProcessorManager;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -30,7 +28,8 @@ class ProcessDocumentJob implements ShouldQueue
     }
 
     public function handle(
-        DocumentRepositoryInterface $documentRepository
+        DocumentRepositoryInterface $documentRepository,
+        DocumentProcessorManager $processorManager
     ): void {
         $document = $documentRepository->findById($this->documentId);
         
@@ -49,21 +48,14 @@ class ProcessDocumentJob implements ShouldQueue
         $documentRepository->updateProcessingStatus($document->id, ProcessingStatus::PROCESSING);
 
         try {
-            $documentType = $document->getDocumentType();
-            
-            if (!$documentType) {
-                Log::warning("Unsupported document type", [
-                    'document_id' => $document->id,
-                    'mime_type' => $document->mime_type,
-                ]);
-                $documentRepository->updateProcessingStatus($document->id, ProcessingStatus::FAILED);
-                return;
-            }
+            $jobs = $processorManager->processDocument($document);
 
-            // Dispatch appropriate processing jobs based on document type
-            $this->dispatchProcessingJobs($document, $documentType);
+            $this->dispatchJobs($jobs);
 
-            Log::info("Document processing jobs dispatched", ['document_id' => $document->id]);
+            Log::info("Document processing jobs dispatched", [
+                'document_id' => $document->id,
+                'job_count' => count($jobs),
+            ]);
             
         } catch (\Exception $e) {
             Log::error("Error processing document", [
@@ -77,39 +69,8 @@ class ProcessDocumentJob implements ShouldQueue
         }
     }
 
-    private function dispatchProcessingJobs(Document $document, DocumentType $documentType): void
+    private function dispatchJobs(array $jobs): void
     {
-        // Create processing job records
-        $jobs = [];
-
-        // Textract jobs for supported document types
-        if ($documentType->supportedByTextract()) {
-            $jobs[] = DocumentProcessingJob::create([
-                'document_id' => $document->id,
-                'job_type' => 'textract_text',
-                'status' => \App\JobStatus::PENDING,
-                'job_parameters' => [
-                    'feature_types' => ['TABLES', 'FORMS'],
-                ],
-            ]);
-        }
-
-        // Comprehend jobs for text-based documents
-        if ($documentType->supportedByComprehend()) {
-            $jobs[] = DocumentProcessingJob::create([
-                'document_id' => $document->id,
-                'job_type' => 'comprehend_sentiment',
-                'status' => \App\JobStatus::PENDING,
-            ]);
-
-            $jobs[] = DocumentProcessingJob::create([
-                'document_id' => $document->id,
-                'job_type' => 'comprehend_entities',
-                'status' => \App\JobStatus::PENDING,
-            ]);
-        }
-
-        // Dispatch the actual processing jobs
         foreach ($jobs as $job) {
             if (str_starts_with($job->job_type, 'textract_')) {
                 ProcessTextractJob::dispatch($job->id);

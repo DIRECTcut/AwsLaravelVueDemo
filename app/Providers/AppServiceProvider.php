@@ -10,6 +10,10 @@ use App\Repositories\DocumentRepository;
 use App\Services\Aws\ComprehendService;
 use App\Services\Aws\S3StorageService;
 use App\Services\Aws\TextractService;
+use App\Services\Processing\DocumentProcessorManager;
+use App\Services\Processing\ImageDocumentProcessor;
+use App\Services\Processing\PdfDocumentProcessor;
+use App\Services\Processing\TextDocumentProcessor;
 use Aws\Comprehend\ComprehendClient;
 use Aws\S3\S3Client;
 use Aws\Textract\TextractClient;
@@ -75,6 +79,18 @@ class AppServiceProvider extends ServiceProvider
             return new ComprehendService(
                 $app->make(ComprehendClient::class)
             );
+        });
+        
+        // Document Processing Strategies
+        $this->app->singleton(DocumentProcessorManager::class, function ($app) {
+            $manager = new DocumentProcessorManager();
+            
+            // Register processors in priority order
+            $manager->register(new PdfDocumentProcessor());
+            $manager->register(new ImageDocumentProcessor());
+            $manager->register(new TextDocumentProcessor());
+            
+            return $manager;
         });
         
         // Repository bindings

@@ -26,7 +26,10 @@ describe('ProcessDocumentJob', function () {
         ]);
         
         $job = new ProcessDocumentJob($document->id);
-        $job->handle(app('App\\Contracts\\Repositories\\DocumentRepositoryInterface'));
+        $job->handle(
+            app('App\\Contracts\\Repositories\\DocumentRepositoryInterface'),
+            app('App\\Services\\Processing\\DocumentProcessorManager')
+        );
         
         // Check that processing jobs were created (only Textract for images)
         expect(DocumentProcessingJob::where('document_id', $document->id)->count())->toBe(1);
@@ -41,7 +44,10 @@ describe('ProcessDocumentJob', function () {
     
     test('handles non-existent document gracefully', function () {
         $job = new ProcessDocumentJob(999);
-        $job->handle(app('App\\Contracts\\Repositories\\DocumentRepositoryInterface'));
+        $job->handle(
+            app('App\\Contracts\\Repositories\\DocumentRepositoryInterface'),
+            app('App\\Services\\Processing\\DocumentProcessorManager')
+        );
         
         // Should not create any processing jobs
         expect(DocumentProcessingJob::count())->toBe(0);
@@ -55,12 +61,15 @@ describe('ProcessDocumentJob', function () {
         ]);
         
         $job = new ProcessDocumentJob($document->id);
-        $job->handle(app('App\\Contracts\\Repositories\\DocumentRepositoryInterface'));
         
-        // Should not create any processing jobs
-        expect(DocumentProcessingJob::count())->toBe(0);
+        expect(function () use ($job) {
+            $job->handle(
+                app('App\\Contracts\\Repositories\\DocumentRepositoryInterface'),
+                app('App\\Services\\Processing\\DocumentProcessorManager')
+            );
+        })->toThrow(\RuntimeException::class, 'No processor available for document type: application/unknown');
         
-        // Check document status was marked as failed
+        // Document status should be marked as failed due to the exception
         $document->refresh();
         expect($document->processing_status)->toBe(ProcessingStatus::FAILED);
     });
