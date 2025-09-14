@@ -58,7 +58,7 @@ class DocumentAnalysisResultFactory extends Factory
                         'BlockType' => 'LINE',
                         'Text' => fake()->sentence(),
                         'Confidence' => fake()->randomFloat(1, 80, 99),
-                    ]
+                    ],
                 ],
                 'ResponseMetadata' => ['RequestId' => fake()->uuid()],
             ],
@@ -85,7 +85,7 @@ class DocumentAnalysisResultFactory extends Factory
                         'BlockType' => 'TABLE',
                         'Id' => fake()->uuid(),
                         'Confidence' => fake()->randomFloat(1, 80, 99),
-                    ]
+                    ],
                 ],
                 'ResponseMetadata' => ['RequestId' => fake()->uuid()],
             ],

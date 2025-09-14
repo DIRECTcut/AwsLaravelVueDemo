@@ -12,7 +12,7 @@ enum ProcessingStatus: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'Pending',
             self::PROCESSING => 'Processing',
             self::COMPLETED => 'Completed',

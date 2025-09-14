@@ -53,12 +53,12 @@ class DocumentRepository implements DocumentRepositoryInterface
             ->get();
     }
 
-    public function searchDocuments(string $query, User $user = null, int $perPage = 15): LengthAwarePaginator
+    public function searchDocuments(string $query, ?User $user = null, int $perPage = 15): LengthAwarePaginator
     {
         $queryBuilder = Document::where(function ($q) use ($query) {
             $q->where('title', 'like', "%{$query}%")
-              ->orWhere('original_filename', 'like', "%{$query}%")
-              ->orWhere('description', 'like', "%{$query}%");
+                ->orWhere('original_filename', 'like', "%{$query}%")
+                ->orWhere('description', 'like', "%{$query}%");
         });
 
         if ($user) {
@@ -70,7 +70,7 @@ class DocumentRepository implements DocumentRepositoryInterface
             ->paginate($perPage);
     }
 
-    public function getDocumentsByTags(array $tags, User $user = null): Collection
+    public function getDocumentsByTags(array $tags, ?User $user = null): Collection
     {
         $queryBuilder = Document::whereJsonContains('tags', $tags);
 
@@ -96,7 +96,7 @@ class DocumentRepository implements DocumentRepositoryInterface
             ->get();
     }
 
-    public function getDocumentStats(User $user = null): array
+    public function getDocumentStats(?User $user = null): array
     {
         $baseQuery = Document::query();
 

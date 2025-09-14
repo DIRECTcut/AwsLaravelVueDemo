@@ -26,13 +26,13 @@ class StoreDocumentRequest extends FormRequest
                 'required',
                 'file',
                 'max:10240', // 10MB
-                'mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx,ppt,pptx,txt'
+                'mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx,ppt,pptx,txt',
             ],
             'title' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
-            'is_public' => 'boolean'
+            'is_public' => 'boolean',
         ];
     }
 

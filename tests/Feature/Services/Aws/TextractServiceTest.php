@@ -126,7 +126,7 @@ describe('Synchronous Operations', function () {
         $s3Key = 'documents/form.pdf';
         $s3Bucket = 'test-bucket';
         $featureTypes = ['FORMS', 'TABLES'];
-        
+
         $mockResult = new Result([
             'Blocks' => [
                 [
@@ -222,7 +222,7 @@ describe('Asynchronous Operations', function () {
 
     test('gets document text detection results when succeeded', function () {
         $jobId = 'job-abc-123';
-        
+
         $this->textractClient->shouldReceive('getDocumentTextDetection')
             ->once()
             ->with(['JobId' => $jobId])
@@ -243,7 +243,7 @@ describe('Asynchronous Operations', function () {
 
     test('returns null when job is in progress', function () {
         $jobId = 'job-abc-123';
-        
+
         $this->textractClient->shouldReceive('getDocumentTextDetection')
             ->once()
             ->with(['JobId' => $jobId])
@@ -258,7 +258,7 @@ describe('Asynchronous Operations', function () {
 
     test('handles partial success with warnings', function () {
         $jobId = 'job-abc-123';
-        
+
         $this->textractClient->shouldReceive('getDocumentTextDetection')
             ->once()
             ->with(['JobId' => $jobId])
@@ -288,7 +288,7 @@ describe('Asynchronous Operations', function () {
 
     test('throws exception when job failed', function () {
         $jobId = 'job-abc-123';
-        
+
         $this->textractClient->shouldReceive('getDocumentTextDetection')
             ->once()
             ->with(['JobId' => $jobId])
@@ -304,7 +304,7 @@ describe('Asynchronous Operations', function () {
 
     test('aggregates results from multiple pages', function () {
         $jobId = 'job-abc-123';
-        
+
         // First call returns first page with NextToken
         $this->textractClient->shouldReceive('getDocumentTextDetection')
             ->once()
@@ -372,7 +372,7 @@ describe('Asynchronous Operations', function () {
 
     test('gets document analysis results when succeeded', function () {
         $jobId = 'job-xyz-456';
-        
+
         $this->textractClient->shouldReceive('getDocumentAnalysis')
             ->once()
             ->with(['JobId' => $jobId])

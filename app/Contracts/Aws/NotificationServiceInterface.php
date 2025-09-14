@@ -4,7 +4,7 @@ namespace App\Contracts\Aws;
 
 interface NotificationServiceInterface
 {
-    public function publish(string $topicArn, string $message, string $subject = null, array $messageAttributes = []): string;
+    public function publish(string $topicArn, string $message, ?string $subject = null, array $messageAttributes = []): string;
 
     public function subscribe(string $topicArn, string $protocol, string $endpoint): string;
 
@@ -14,7 +14,7 @@ interface NotificationServiceInterface
 
     public function deleteTopic(string $topicArn): bool;
 
-    public function listSubscriptions(string $topicArn = null): array;
+    public function listSubscriptions(?string $topicArn = null): array;
 
     public function confirmSubscription(string $topicArn, string $token): string;
 }

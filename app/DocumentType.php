@@ -13,7 +13,7 @@ enum DocumentType: string
 
     public static function fromMimeType(string $mimeType): ?self
     {
-        return match($mimeType) {
+        return match ($mimeType) {
             'application/pdf' => self::PDF,
             'image/jpeg', 'image/png', 'image/gif', 'image/webp' => self::IMAGE,
             'text/plain' => self::TEXT,

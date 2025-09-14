@@ -16,11 +16,13 @@ class PdfDocumentProcessor implements DocumentProcessorInterface
 
     public function __construct(?LoggerInterface $logger = null)
     {
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $logger ?? new NullLogger;
     }
+
     public function canProcess(Document $document): bool
     {
         $documentType = $document->getDocumentType();
+
         return $documentType === DocumentType::PDF;
     }
 

@@ -18,31 +18,31 @@ beforeEach(function () {
 describe('ProcessDocumentJob', function () {
     test('processes image document successfully', function () {
         Queue::fake(); // Prevent child jobs from running immediately
-        
+
         $document = Document::factory()->create([
             'user_id' => $this->user->id,
             'mime_type' => 'image/jpeg',
             'processing_status' => ProcessingStatus::PENDING,
         ]);
-        
+
         $job = new ProcessDocumentJob($document->id);
         $job->handle(
             app('App\\Contracts\\Repositories\\DocumentRepositoryInterface'),
             app('App\\Services\\Processing\\DocumentProcessorManager'),
             app('Psr\\Log\\LoggerInterface')
         );
-        
+
         // Check that processing jobs were created (only Textract for images)
         expect(DocumentProcessingJob::where('document_id', $document->id)->count())->toBe(1);
-        
+
         // Check that the Textract job was dispatched
         Queue::assertPushed(ProcessTextractJob::class);
-        
+
         // Check document status was updated to processing (child jobs haven't run)
         $document->refresh();
         expect($document->processing_status)->toBe(ProcessingStatus::PROCESSING);
     });
-    
+
     test('handles non-existent document gracefully', function () {
         $job = new ProcessDocumentJob(999);
         $job->handle(
@@ -50,20 +50,20 @@ describe('ProcessDocumentJob', function () {
             app('App\\Services\\Processing\\DocumentProcessorManager'),
             app('Psr\\Log\\LoggerInterface')
         );
-        
+
         // Should not create any processing jobs
         expect(DocumentProcessingJob::count())->toBe(0);
     });
-    
+
     test('handles unsupported document type', function () {
         $document = Document::factory()->create([
             'user_id' => $this->user->id,
             'mime_type' => 'application/unknown',
             'processing_status' => ProcessingStatus::PENDING,
         ]);
-        
+
         $job = new ProcessDocumentJob($document->id);
-        
+
         expect(function () use ($job) {
             $job->handle(
                 app('App\\Contracts\\Repositories\\DocumentRepositoryInterface'),
@@ -71,7 +71,7 @@ describe('ProcessDocumentJob', function () {
                 app('Psr\\Log\\LoggerInterface')
             );
         })->toThrow(\RuntimeException::class, 'No processor available for document type: application/unknown');
-        
+
         // Document status should be marked as failed due to the exception
         $document->refresh();
         expect($document->processing_status)->toBe(ProcessingStatus::FAILED);

@@ -18,8 +18,8 @@ class DocumentFactory extends Factory
      */
     public function definition(): array
     {
-        $filename = $this->faker->word . '.' . $this->faker->randomElement(['pdf', 'jpg', 'png', 'docx']);
-        
+        $filename = $this->faker->word.'.'.$this->faker->randomElement(['pdf', 'jpg', 'png', 'docx']);
+
         return [
             'user_id' => User::factory(),
             'title' => $this->faker->sentence(3),
@@ -27,7 +27,7 @@ class DocumentFactory extends Factory
             'file_extension' => pathinfo($filename, PATHINFO_EXTENSION),
             'mime_type' => $this->getMimeType(pathinfo($filename, PATHINFO_EXTENSION)),
             'file_size' => $this->faker->numberBetween(1024, 10485760), // 1KB to 10MB
-            's3_key' => 'documents/' . $this->faker->uuid . '.' . pathinfo($filename, PATHINFO_EXTENSION),
+            's3_key' => 'documents/'.$this->faker->uuid.'.'.pathinfo($filename, PATHINFO_EXTENSION),
             's3_bucket' => 'test-bucket',
             'processing_status' => $this->faker->randomElement(ProcessingStatus::cases()),
             'metadata' => [
@@ -40,10 +40,10 @@ class DocumentFactory extends Factory
             'uploaded_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
         ];
     }
-    
+
     private function getMimeType(string $extension): string
     {
-        return match($extension) {
+        return match ($extension) {
             'pdf' => 'application/pdf',
             'jpg', 'jpeg' => 'image/jpeg',
             'png' => 'image/png',

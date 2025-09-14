@@ -13,7 +13,7 @@ class TextractService implements DocumentAnalysisServiceInterface
 {
     public function __construct(
         private TextractClient $textractClient,
-        private LoggerInterface $logger = new NullLogger()
+        private LoggerInterface $logger = new NullLogger
     ) {}
 
     /**
@@ -49,7 +49,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             ]);
 
             throw new DocumentAnalysisException(
-                'Failed to start document text detection: ' . $e->getAwsErrorMessage(),
+                'Failed to start document text detection: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -82,7 +82,7 @@ class TextractService implements DocumentAnalysisServiceInterface
                 ]);
 
                 throw new DocumentAnalysisException(
-                    'Text detection job failed: ' . ($result['StatusMessage'] ?? 'Unknown error')
+                    'Text detection job failed: '.($result['StatusMessage'] ?? 'Unknown error')
                 );
             }
 
@@ -98,7 +98,7 @@ class TextractService implements DocumentAnalysisServiceInterface
                 $partialResults['IsPartial'] = true;
                 $partialResults['StatusMessage'] = $result['StatusMessage'] ?? 'Some pages could not be processed';
                 $partialResults['Warnings'] = $result['Warnings'] ?? [];
-                
+
                 return $partialResults;
             }
 
@@ -112,7 +112,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             ]);
 
             throw new DocumentAnalysisException(
-                'Failed to get text detection results: ' . $e->getAwsErrorMessage(),
+                'Failed to get text detection results: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -172,7 +172,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             }
 
             throw new DocumentAnalysisException(
-                'Failed to detect document text: ' . $e->getAwsErrorMessage(),
+                'Failed to detect document text: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -219,7 +219,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             }
 
             throw new DocumentAnalysisException(
-                'Failed to analyze document: ' . $e->getAwsErrorMessage(),
+                'Failed to analyze document: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -262,7 +262,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             ]);
 
             throw new DocumentAnalysisException(
-                'Failed to start document analysis: ' . $e->getAwsErrorMessage(),
+                'Failed to start document analysis: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -295,7 +295,7 @@ class TextractService implements DocumentAnalysisServiceInterface
                 ]);
 
                 throw new DocumentAnalysisException(
-                    'Document analysis job failed: ' . ($result['StatusMessage'] ?? 'Unknown error')
+                    'Document analysis job failed: '.($result['StatusMessage'] ?? 'Unknown error')
                 );
             }
 
@@ -311,7 +311,7 @@ class TextractService implements DocumentAnalysisServiceInterface
                 $partialResults['IsPartial'] = true;
                 $partialResults['StatusMessage'] = $result['StatusMessage'] ?? 'Some pages could not be analyzed';
                 $partialResults['Warnings'] = $result['Warnings'] ?? [];
-                
+
                 return $partialResults;
             }
 
@@ -325,7 +325,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             ]);
 
             throw new DocumentAnalysisException(
-                'Failed to get document analysis results: ' . $e->getAwsErrorMessage(),
+                'Failed to get document analysis results: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );

@@ -28,7 +28,7 @@ return new class extends Migration
             $table->boolean('is_public')->default(false);
             $table->timestamp('uploaded_at');
             $table->timestamps();
-            
+
             $table->index(['user_id', 'processing_status']);
             $table->index('s3_key');
             $table->index('uploaded_at');

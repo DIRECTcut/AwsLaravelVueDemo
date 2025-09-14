@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('confidence_score', 5, 4)->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
-            
+
             $table->index(['document_id', 'analysis_type']);
             $table->index('confidence_score');
         });

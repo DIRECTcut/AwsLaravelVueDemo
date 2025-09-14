@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $logger = $this->app->make(LoggerInterface::class);
-        
+
         // AWS S3 Service
         $this->app->singleton(S3Client::class, function () {
             return new S3Client([
@@ -40,14 +40,14 @@ class AppServiceProvider extends ServiceProvider
                 ],
             ]);
         });
-        
+
         $this->app->singleton(StorageServiceInterface::class, function ($app) {
             return new S3StorageService(
                 $app->make(S3Client::class),
                 config('filesystems.disks.s3.bucket')
             );
         });
-        
+
         // AWS Textract Service
         $this->app->singleton(TextractClient::class, function () {
             return new TextractClient([
@@ -59,14 +59,14 @@ class AppServiceProvider extends ServiceProvider
                 ],
             ]);
         });
-        
+
         $this->app->singleton(DocumentAnalysisServiceInterface::class, function ($app) use ($logger) {
             return new TextractService(
                 $app->make(TextractClient::class),
                 $logger
             );
         });
-        
+
         // AWS Comprehend Service
         $this->app->singleton(ComprehendClient::class, function () {
             return new ComprehendClient([
@@ -78,14 +78,14 @@ class AppServiceProvider extends ServiceProvider
                 ],
             ]);
         });
-        
+
         $this->app->singleton(TextAnalysisServiceInterface::class, function ($app) use ($logger) {
             return new ComprehendService(
                 $app->make(ComprehendClient::class),
                 $logger
             );
         });
-        
+
         // Document Processing Strategies
         $this->app->singleton(DocumentProcessorManager::class, function ($app) use ($logger) {
             $manager = new DocumentProcessorManager($logger);
@@ -93,10 +93,10 @@ class AppServiceProvider extends ServiceProvider
             $manager->register(new PdfDocumentProcessor($logger));
             $manager->register(new ImageDocumentProcessor($logger));
             $manager->register(new TextDocumentProcessor($logger));
-            
+
             return $manager;
         });
-        
+
         // Repository bindings
         $this->app->singleton(DocumentRepositoryInterface::class, DocumentRepository::class);
     }

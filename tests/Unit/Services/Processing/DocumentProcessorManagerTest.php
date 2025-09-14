@@ -4,7 +4,7 @@ use App\Contracts\Processing\DocumentProcessorInterface;
 use App\Services\Processing\DocumentProcessorManager;
 
 beforeEach(function () {
-    $this->manager = new DocumentProcessorManager();
+    $this->manager = new DocumentProcessorManager;
 });
 
 describe('DocumentProcessorManager', function () {

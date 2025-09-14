@@ -13,9 +13,10 @@ use Psr\Log\LoggerInterface;
 
 class ProcessTextractJob implements ShouldQueue
 {
-    use Queueable, InteractsWithQueue, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels;
 
     public int $timeout = 600; // 10 minutes
+
     public int $maxAttempts = 2;
 
     public function __construct(
@@ -27,19 +28,21 @@ class ProcessTextractJob implements ShouldQueue
         LoggerInterface $logger
     ): void {
         $processingJob = DocumentProcessingJob::find($this->processingJobId);
-        
-        if (!$processingJob) {
-            $logger->error("Processing job not found", ['job_id' => $this->processingJobId]);
+
+        if (! $processingJob) {
+            $logger->error('Processing job not found', ['job_id' => $this->processingJobId]);
+
             return;
         }
 
         $document = $processingJob->document;
-        if (!$document) {
-            $logger->error("Document not found for processing job", ['job_id' => $this->processingJobId]);
+        if (! $document) {
+            $logger->error('Document not found for processing job', ['job_id' => $this->processingJobId]);
+
             return;
         }
 
-        $logger->info("Starting Textract processing", [
+        $logger->info('Starting Textract processing', [
             'job_id' => $processingJob->id,
             'document_id' => $document->id,
             'job_type' => $processingJob->job_type,
@@ -49,7 +52,7 @@ class ProcessTextractJob implements ShouldQueue
 
         try {
             // Determine analysis type based on job type
-            $results = match($processingJob->job_type) {
+            $results = match ($processingJob->job_type) {
                 'textract_text' => $textractService->detectDocumentText(
                     $document->s3_key,
                     $document->s3_bucket
@@ -73,8 +76,8 @@ class ProcessTextractJob implements ShouldQueue
                 $metadata['is_partial'] = true;
                 $metadata['partial_message'] = $results['StatusMessage'] ?? 'Some pages could not be processed';
                 $metadata['warnings'] = $results['Warnings'] ?? [];
-                
-                $logger->warning("Textract processing completed with partial results", [
+
+                $logger->warning('Textract processing completed with partial results', [
                     'job_id' => $processingJob->id,
                     'document_id' => $document->id,
                     'message' => $metadata['partial_message'],
@@ -92,7 +95,7 @@ class ProcessTextractJob implements ShouldQueue
 
             $processingJob->markAsCompleted($results);
 
-            $logger->info("Textract processing completed", [
+            $logger->info('Textract processing completed', [
                 'job_id' => $processingJob->id,
                 'document_id' => $document->id,
             ]);
@@ -101,7 +104,7 @@ class ProcessTextractJob implements ShouldQueue
             $this->checkDocumentProcessingCompletion($document, $logger);
 
         } catch (\Exception $e) {
-            $logger->error("Textract processing failed", [
+            $logger->error('Textract processing failed', [
                 'job_id' => $processingJob->id,
                 'document_id' => $document->id,
                 'error' => $e->getMessage(),
@@ -130,7 +133,7 @@ class ProcessTextractJob implements ShouldQueue
                         'geometry' => $block['Geometry'] ?? null,
                     ];
                     break;
-                    
+
                 case 'TABLE':
                     $processed['tables'][] = [
                         'id' => $block['Id'],
@@ -138,7 +141,7 @@ class ProcessTextractJob implements ShouldQueue
                         'geometry' => $block['Geometry'] ?? null,
                     ];
                     break;
-                    
+
                 case 'KEY_VALUE_SET':
                     if (isset($block['EntityTypes']) && in_array('KEY', $block['EntityTypes'])) {
                         $processed['forms'][] = [
@@ -157,13 +160,13 @@ class ProcessTextractJob implements ShouldQueue
     private function calculateAverageConfidence(array $results): ?float
     {
         $confidences = [];
-        
+
         foreach ($results['Blocks'] ?? [] as $block) {
             if (isset($block['Confidence'])) {
                 $confidences[] = $block['Confidence'];
             }
         }
-        
+
         return empty($confidences) ? null : array_sum($confidences) / count($confidences) / 100;
     }
 
@@ -175,14 +178,14 @@ class ProcessTextractJob implements ShouldQueue
 
         if ($pendingJobs === 0) {
             $document->update(['processing_status' => \App\ProcessingStatus::COMPLETED]);
-            
-            $logger->info("Document processing completed", ['document_id' => $document->id]);
+
+            $logger->info('Document processing completed', ['document_id' => $document->id]);
         }
     }
 
     public function failed(\Throwable $exception): void
     {
-        app(LoggerInterface::class)->error("ProcessTextractJob failed", [
+        app(LoggerInterface::class)->error('ProcessTextractJob failed', [
             'processing_job_id' => $this->processingJobId,
             'error' => $exception->getMessage(),
         ]);

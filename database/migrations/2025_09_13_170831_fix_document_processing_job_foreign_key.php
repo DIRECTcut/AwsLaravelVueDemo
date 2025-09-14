@@ -15,7 +15,7 @@ return new class extends Migration
             $table->dropForeign(['document_id']);
             $table->foreign('document_id')->references('id')->on('document')->onDelete('cascade');
         });
-        
+
         Schema::table('document_analysis_result', function (Blueprint $table) {
             $table->dropForeign(['document_id']);
             $table->foreign('document_id')->references('id')->on('document')->onDelete('cascade');
@@ -31,7 +31,7 @@ return new class extends Migration
             $table->dropForeign(['document_id']);
             $table->foreign('document_id')->references('id')->on('documents')->onDelete('cascade');
         });
-        
+
         Schema::table('document_analysis_result', function (Blueprint $table) {
             $table->dropForeign(['document_id']);
             $table->foreign('document_id')->references('id')->on('documents')->onDelete('cascade');

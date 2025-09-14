@@ -13,7 +13,7 @@ class ComprehendService implements TextAnalysisServiceInterface
 {
     public function __construct(
         private ComprehendClient $comprehendClient,
-        private LoggerInterface $logger = new NullLogger()
+        private LoggerInterface $logger = new NullLogger
     ) {}
 
     /**
@@ -57,7 +57,7 @@ class ComprehendService implements TextAnalysisServiceInterface
             }
 
             throw new TextAnalysisException(
-                'Failed to detect sentiment: ' . $e->getAwsErrorMessage(),
+                'Failed to detect sentiment: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -96,7 +96,7 @@ class ComprehendService implements TextAnalysisServiceInterface
             }
 
             throw new TextAnalysisException(
-                'Failed to detect entities: ' . $e->getAwsErrorMessage(),
+                'Failed to detect entities: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -127,7 +127,7 @@ class ComprehendService implements TextAnalysisServiceInterface
             ]);
 
             throw new TextAnalysisException(
-                'Failed to detect key phrases: ' . $e->getAwsErrorMessage(),
+                'Failed to detect key phrases: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -145,7 +145,7 @@ class ComprehendService implements TextAnalysisServiceInterface
             ]);
 
             $languages = $result['Languages'] ?? [];
-            if (!empty($languages)) {
+            if (! empty($languages)) {
                 $this->logger->info('Detected languages', [
                     'primary_language' => $languages[0]['LanguageCode'] ?? 'unknown',
                     'confidence' => $languages[0]['Score'] ?? 0,
@@ -161,7 +161,7 @@ class ComprehendService implements TextAnalysisServiceInterface
             ]);
 
             throw new TextAnalysisException(
-                'Failed to detect language: ' . $e->getAwsErrorMessage(),
+                'Failed to detect language: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -183,7 +183,7 @@ class ComprehendService implements TextAnalysisServiceInterface
                 'OutputDataConfig' => $outputDataConfig,
                 'DataAccessRoleArn' => $dataAccessRoleArn,
                 'LanguageCode' => $languageCode,
-                'JobName' => 'entities-detection-' . time(),
+                'JobName' => 'entities-detection-'.time(),
             ]);
 
             $this->logger->info('Started entities detection job', [
@@ -207,7 +207,7 @@ class ComprehendService implements TextAnalysisServiceInterface
             }
 
             throw new TextAnalysisException(
-                'Failed to start entities detection job: ' . $e->getAwsErrorMessage(),
+                'Failed to start entities detection job: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -229,7 +229,7 @@ class ComprehendService implements TextAnalysisServiceInterface
                 'OutputDataConfig' => $outputDataConfig,
                 'DataAccessRoleArn' => $dataAccessRoleArn,
                 'LanguageCode' => $languageCode,
-                'JobName' => 'sentiment-detection-' . time(),
+                'JobName' => 'sentiment-detection-'.time(),
             ]);
 
             $this->logger->info('Started sentiment detection job', [
@@ -245,7 +245,7 @@ class ComprehendService implements TextAnalysisServiceInterface
             ]);
 
             throw new TextAnalysisException(
-                'Failed to start sentiment detection job: ' . $e->getAwsErrorMessage(),
+                'Failed to start sentiment detection job: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -263,7 +263,7 @@ class ComprehendService implements TextAnalysisServiceInterface
             ]);
 
             $jobDetails = $result['EntitiesDetectionJobProperties'] ?? [];
-            
+
             $this->logger->info('Retrieved entities detection job details', [
                 'job_id' => $jobId,
                 'status' => $jobDetails['JobStatus'] ?? 'UNKNOWN',
@@ -286,7 +286,7 @@ class ComprehendService implements TextAnalysisServiceInterface
             }
 
             throw new TextAnalysisException(
-                'Failed to describe entities detection job: ' . $e->getAwsErrorMessage(),
+                'Failed to describe entities detection job: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -304,7 +304,7 @@ class ComprehendService implements TextAnalysisServiceInterface
             ]);
 
             $jobDetails = $result['SentimentDetectionJobProperties'] ?? [];
-            
+
             $this->logger->info('Retrieved sentiment detection job details', [
                 'job_id' => $jobId,
                 'status' => $jobDetails['JobStatus'] ?? 'UNKNOWN',
@@ -327,7 +327,7 @@ class ComprehendService implements TextAnalysisServiceInterface
             }
 
             throw new TextAnalysisException(
-                'Failed to describe sentiment detection job: ' . $e->getAwsErrorMessage(),
+                'Failed to describe sentiment detection job: '.$e->getAwsErrorMessage(),
                 $e->getCode(),
                 $e
             );
@@ -344,7 +344,7 @@ class ComprehendService implements TextAnalysisServiceInterface
     private function truncateText(string $text, int $maxBytes = 5000): string
     {
         $textBytes = strlen(mb_convert_encoding($text, 'UTF-8'));
-        
+
         if ($textBytes <= $maxBytes) {
             return $text;
         }
@@ -352,9 +352,9 @@ class ComprehendService implements TextAnalysisServiceInterface
         // Truncate by character count (approximate)
         $ratio = $maxBytes / $textBytes;
         $charLimit = (int) (mb_strlen($text) * $ratio * 0.95); // 95% to be safe
-        
+
         $truncated = mb_substr($text, 0, $charLimit);
-        
+
         $this->logger->warning('Text truncated for Comprehend analysis', [
             'original_bytes' => $textBytes,
             'max_bytes' => $maxBytes,

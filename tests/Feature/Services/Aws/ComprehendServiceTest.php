@@ -22,7 +22,7 @@ afterEach(function () {
 describe('Sentiment Detection', function () {
     test('detects sentiment successfully', function () {
         $text = 'I absolutely love this product! It works great.';
-        
+
         $mockResult = new Result([
             'Sentiment' => 'POSITIVE',
             'SentimentScore' => [
@@ -120,7 +120,7 @@ describe('Sentiment Detection', function () {
 describe('Entity Detection', function () {
     test('detects entities successfully', function () {
         $text = 'Amazon was founded by Jeff Bezos in Seattle.';
-        
+
         $mockResult = new Result([
             'Entities' => [
                 [
@@ -213,7 +213,7 @@ describe('Entity Detection', function () {
 describe('Key Phrase Detection', function () {
     test('detects key phrases successfully', function () {
         $text = 'The quarterly financial report shows strong revenue growth.';
-        
+
         $mockResult = new Result([
             'KeyPhrases' => [
                 [
@@ -274,7 +274,7 @@ describe('Key Phrase Detection', function () {
 describe('Language Detection', function () {
     test('detects language successfully', function () {
         $text = 'This is an English text sample.';
-        
+
         $mockResult = new Result([
             'Languages' => [
                 [
@@ -332,7 +332,7 @@ describe('Batch Jobs', function () {
         $inputConfig = ['S3Uri' => 's3://bucket/input/', 'InputFormat' => 'ONE_DOC_PER_LINE'];
         $outputConfig = ['S3Uri' => 's3://bucket/output/'];
         $roleArn = 'arn:aws:iam::123456789012:role/ComprehendRole';
-        
+
         $this->comprehendClient->shouldReceive('startEntitiesDetectionJob')
             ->once()
             ->with(Mockery::on(function ($args) use ($inputConfig, $outputConfig, $roleArn) {
@@ -361,7 +361,7 @@ describe('Batch Jobs', function () {
         $inputConfig = ['S3Uri' => 's3://bucket/input/', 'InputFormat' => 'ONE_DOC_PER_FILE'];
         $outputConfig = ['S3Uri' => 's3://bucket/output/'];
         $roleArn = 'arn:aws:iam::123456789012:role/ComprehendRole';
-        
+
         $this->comprehendClient->shouldReceive('startSentimentDetectionJob')
             ->once()
             ->with(Mockery::on(function ($args) use ($inputConfig, $outputConfig, $roleArn) {
@@ -388,7 +388,7 @@ describe('Batch Jobs', function () {
 
     test('describes entities detection job successfully', function () {
         $jobId = 'job-entities-123';
-        
+
         $this->comprehendClient->shouldReceive('describeEntitiesDetectionJob')
             ->once()
             ->with(['JobId' => $jobId])
@@ -411,7 +411,7 @@ describe('Batch Jobs', function () {
 
     test('describes sentiment detection job successfully', function () {
         $jobId = 'job-sentiment-456';
-        
+
         $this->comprehendClient->shouldReceive('describeSentimentDetectionJob')
             ->once()
             ->with(['JobId' => $jobId])
@@ -504,7 +504,7 @@ describe('Batch Jobs', function () {
 
     test('handles job not found exception for entities detection', function () {
         $jobId = 'non-existent-job';
-        
+
         $awsException = Mockery::mock(AwsException::class);
         $awsException->shouldReceive('getAwsErrorCode')
             ->andReturn('ResourceNotFoundException');
@@ -548,7 +548,7 @@ describe('Batch Jobs', function () {
 
     test('handles job not found exception for sentiment detection', function () {
         $jobId = 'non-existent-sentiment-job';
-        
+
         $awsException = Mockery::mock(AwsException::class);
         $awsException->shouldReceive('getAwsErrorCode')
             ->andReturn('ResourceNotFoundException');
@@ -595,7 +595,7 @@ describe('Text Truncation', function () {
     test('truncates text that exceeds byte limit', function () {
         // Create a text that's definitely over 5000 bytes
         $longText = str_repeat('This is a test sentence. ', 300); // About 7500 bytes
-        
+
         $mockResult = new Result([
             'Sentiment' => 'NEUTRAL',
             'SentimentScore' => ['Neutral' => 0.9],

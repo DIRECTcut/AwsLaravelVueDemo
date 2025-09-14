@@ -19,13 +19,13 @@ class S3StorageService implements StorageServiceInterface
 
     public function uploadFile(UploadedFile $file, string $path, array $metadata = []): string
     {
-        if (!$file->isValid()) {
+        if (! $file->isValid()) {
             throw StorageException::invalidFile('File upload failed or file is corrupted');
         }
 
         $filename = $file->getClientOriginalName();
         $extension = $file->getClientOriginalExtension();
-        $key = $path . '/' . Str::uuid() . '.' . $extension;
+        $key = $path.'/'.Str::uuid().'.'.$extension;
 
         try {
             $this->s3Client->putObject([
@@ -54,6 +54,7 @@ class S3StorageService implements StorageServiceInterface
                 'Bucket' => $this->bucket,
                 'Key' => $key,
             ]);
+
             return true;
         } catch (S3Exception $e) {
             if ($e->getAwsErrorCode() === 'AccessDenied') {
@@ -92,9 +93,10 @@ class S3StorageService implements StorageServiceInterface
         try {
             $this->s3Client->copyObject([
                 'Bucket' => $this->bucket,
-                'CopySource' => $this->bucket . '/' . $sourceKey,
+                'CopySource' => $this->bucket.'/'.$sourceKey,
                 'Key' => $destinationKey,
             ]);
+
             return true;
         } catch (S3Exception $e) {
             if ($e->getAwsErrorCode() === 'NoSuchKey') {
@@ -116,6 +118,7 @@ class S3StorageService implements StorageServiceInterface
                 'Bucket' => $this->bucket,
                 'Key' => $key,
             ]);
+
             return $result->toArray();
         } catch (S3Exception $e) {
             if (in_array($e->getAwsErrorCode(), ['NotFound', 'NoSuchKey'])) {

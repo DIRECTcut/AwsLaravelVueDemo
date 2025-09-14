@@ -20,7 +20,7 @@ class DocumentProcessorManager
     public function __construct(?LoggerInterface $logger = null)
     {
         $this->processors = collect();
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $logger ?? new NullLogger;
     }
 
     /**
@@ -29,7 +29,7 @@ class DocumentProcessorManager
     public function register(DocumentProcessorInterface $processor): void
     {
         $this->processors->push($processor);
-        
+
         // Sort by priority (highest first)
         $this->processors = $this->processors->sortByDesc(function ($processor) {
             return $processor->getPriority();
@@ -62,7 +62,7 @@ class DocumentProcessorManager
                     'processor' => get_class($processor),
                     'mime_type' => $document->mime_type,
                 ]);
-                
+
                 return $processor;
             }
         }
@@ -83,7 +83,7 @@ class DocumentProcessorManager
     {
         $processor = $this->findProcessor($document);
 
-        if (!$processor) {
+        if (! $processor) {
             throw new \RuntimeException(
                 "No processor available for document type: {$document->mime_type}"
             );
@@ -104,7 +104,7 @@ class DocumentProcessorManager
     public function getSupportedMimeTypes(): array
     {
         return $this->processors
-            ->flatMap(fn($processor) => $processor->getSupportedMimeTypes())
+            ->flatMap(fn ($processor) => $processor->getSupportedMimeTypes())
             ->unique()
             ->sort()
             ->values()

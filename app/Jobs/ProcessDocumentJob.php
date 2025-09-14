@@ -13,9 +13,10 @@ use Psr\Log\LoggerInterface;
 
 class ProcessDocumentJob implements ShouldQueue
 {
-    use Queueable, InteractsWithQueue, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels;
 
     public int $timeout = 300; // 5 minutes
+
     public int $maxAttempts = 3;
 
     public function __construct(
@@ -33,13 +34,14 @@ class ProcessDocumentJob implements ShouldQueue
         LoggerInterface $logger
     ): void {
         $document = $documentRepository->findById($this->documentId);
-        
-        if (!$document) {
-            $logger->error("Document not found for processing", ['document_id' => $this->documentId]);
+
+        if (! $document) {
+            $logger->error('Document not found for processing', ['document_id' => $this->documentId]);
+
             return;
         }
 
-        $logger->info("Starting document processing", [
+        $logger->info('Starting document processing', [
             'document_id' => $document->id,
             'filename' => $document->original_filename,
             'type' => $document->getDocumentType()?->value,
@@ -53,18 +55,18 @@ class ProcessDocumentJob implements ShouldQueue
 
             $this->dispatchJobs($jobs);
 
-            $logger->info("Document processing jobs dispatched", [
+            $logger->info('Document processing jobs dispatched', [
                 'document_id' => $document->id,
                 'job_count' => count($jobs),
             ]);
-            
+
         } catch (\Exception $e) {
-            $logger->error("Error processing document", [
+            $logger->error('Error processing document', [
                 'document_id' => $document->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             $documentRepository->updateProcessingStatus($document->id, ProcessingStatus::FAILED);
             throw $e;
         }
@@ -83,7 +85,7 @@ class ProcessDocumentJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
-        app(LoggerInterface::class)->error("ProcessDocumentJob failed", [
+        app(LoggerInterface::class)->error('ProcessDocumentJob failed', [
             'document_id' => $this->documentId,
             'error' => $exception->getMessage(),
         ]);

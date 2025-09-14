@@ -24,15 +24,15 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         $query = $request->get('search');
-        
+
         if ($query) {
             $documents = $this->documentRepository->searchDocuments($query, $user, 15);
         } else {
             $documents = $this->documentRepository->getUserDocuments($user, 15);
         }
-        
+
         $stats = $this->documentRepository->getDocumentStats($user);
-        
+
         return Inertia::render('Documents/Index', [
             'documents' => $documents,
             'stats' => $stats,
@@ -45,7 +45,7 @@ class DocumentController extends Controller
         try {
             $user = Auth::user();
             $file = $request->file('file');
-            
+
             // Upload file to S3
             $s3Key = $this->storageService->uploadFile(
                 $file,
@@ -55,7 +55,7 @@ class DocumentController extends Controller
                     'uploaded_at' => now()->toISOString(),
                 ]
             );
-            
+
             // Create document record
             $document = $this->documentRepository->create([
                 'user_id' => $user->id,
@@ -74,12 +74,12 @@ class DocumentController extends Controller
             ]);
 
             ProcessDocumentJob::dispatch($document->id);
-            
+
             return response()->json([
                 'message' => 'Document uploaded successfully',
                 'document' => $document->load('user'),
             ], 201);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to upload document',
@@ -92,13 +92,13 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         $document = $this->documentRepository->findByIdForUser($id, $user);
-        
-        if (!$document) {
+
+        if (! $document) {
             abort(404, 'Document not found');
         }
-        
+
         $signedUrl = $this->storageService->getSignedUrl($document->s3_key, 60);
-        
+
         return Inertia::render('Documents/Show', [
             'document' => $document->load(['processingJobs', 'analysisResults']),
             'downloadUrl' => $signedUrl,
@@ -109,14 +109,14 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         $document = $this->documentRepository->findByIdForUser($id, $user);
-        
-        if (!$document) {
+
+        if (! $document) {
             return response()->json(['message' => 'Document not found'], 404);
         }
-        
+
         try {
             $signedUrl = $this->storageService->getSignedUrl($document->s3_key, 10);
-            
+
             return response()->json([
                 'download_url' => $signedUrl,
                 'filename' => $document->original_filename,
@@ -133,22 +133,22 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         $document = $this->documentRepository->findByIdForUser($id, $user);
-        
-        if (!$document) {
+
+        if (! $document) {
             return response()->json(['message' => 'Document not found'], 404);
         }
-        
+
         try {
             // Delete from S3
             $this->storageService->deleteFile($document->s3_key);
-            
+
             // Delete from database
             $this->documentRepository->delete($document->id);
-            
+
             return response()->json([
                 'message' => 'Document deleted successfully',
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to delete document',
@@ -161,7 +161,7 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         $stats = $this->documentRepository->getDocumentStats($user);
-        
+
         return response()->json($stats);
     }
 
@@ -169,7 +169,7 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         $documents = $this->documentRepository->getRecentDocuments($user, 10);
-        
+
         return response()->json($documents);
     }
 }

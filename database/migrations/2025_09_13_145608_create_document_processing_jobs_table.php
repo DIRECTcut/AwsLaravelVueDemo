@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamp('started_at')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
-            
+
             $table->index(['document_id', 'job_type']);
             $table->index('status');
             $table->index('aws_job_id');

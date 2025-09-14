@@ -16,11 +16,13 @@ class ImageDocumentProcessor implements DocumentProcessorInterface
 
     public function __construct(?LoggerInterface $logger = null)
     {
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $logger ?? new NullLogger;
     }
+
     public function canProcess(Document $document): bool
     {
         $documentType = $document->getDocumentType();
+
         return $documentType === DocumentType::IMAGE;
     }
 
@@ -45,7 +47,7 @@ class ImageDocumentProcessor implements DocumentProcessorInterface
 
         // If OCR extracts text, we can run Comprehend on it
         // But we'll let the Textract job handle scheduling Comprehend based on results
-        
+
         $this->logger->info('Created processing jobs for image document', [
             'document_id' => $document->id,
             'job_count' => count($jobs),

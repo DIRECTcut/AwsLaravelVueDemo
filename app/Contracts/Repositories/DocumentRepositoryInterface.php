@@ -24,13 +24,13 @@ interface DocumentRepositoryInterface
 
     public function getDocumentsByStatus(ProcessingStatus $status): Collection;
 
-    public function searchDocuments(string $query, User $user = null, int $perPage = 15): LengthAwarePaginator;
+    public function searchDocuments(string $query, ?User $user = null, int $perPage = 15): LengthAwarePaginator;
 
-    public function getDocumentsByTags(array $tags, User $user = null): Collection;
+    public function getDocumentsByTags(array $tags, ?User $user = null): Collection;
 
     public function delete(int $id): bool;
 
     public function getRecentDocuments(User $user, int $limit = 10): Collection;
 
-    public function getDocumentStats(User $user = null): array;
+    public function getDocumentStats(?User $user = null): array;
 }
