@@ -7,10 +7,17 @@ use App\DocumentType;
 use App\JobStatus;
 use App\Models\Document;
 use App\Models\DocumentProcessingJob;
-use Illuminate\Support\Facades\Log;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class TextDocumentProcessor implements DocumentProcessorInterface
 {
+    private LoggerInterface $logger;
+
+    public function __construct(?LoggerInterface $logger = null)
+    {
+        $this->logger = $logger ?? new NullLogger();
+    }
     public function canProcess(Document $document): bool
     {
         $documentType = $document->getDocumentType();
@@ -19,7 +26,7 @@ class TextDocumentProcessor implements DocumentProcessorInterface
 
     public function process(Document $document): array
     {
-        Log::info('Processing text document', [
+        $this->logger->info('Processing text document', [
             'document_id' => $document->id,
             'mime_type' => $document->mime_type,
         ]);
@@ -63,7 +70,7 @@ class TextDocumentProcessor implements DocumentProcessorInterface
             ],
         ]);
 
-        Log::info('Created Comprehend processing jobs for text document', [
+        $this->logger->info('Created Comprehend processing jobs for text document', [
             'document_id' => $document->id,
             'job_count' => count($jobs),
         ]);

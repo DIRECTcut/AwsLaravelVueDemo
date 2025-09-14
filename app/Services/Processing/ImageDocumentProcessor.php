@@ -7,10 +7,17 @@ use App\DocumentType;
 use App\JobStatus;
 use App\Models\Document;
 use App\Models\DocumentProcessingJob;
-use Illuminate\Support\Facades\Log;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class ImageDocumentProcessor implements DocumentProcessorInterface
 {
+    private LoggerInterface $logger;
+
+    public function __construct(?LoggerInterface $logger = null)
+    {
+        $this->logger = $logger ?? new NullLogger();
+    }
     public function canProcess(Document $document): bool
     {
         $documentType = $document->getDocumentType();
@@ -19,7 +26,7 @@ class ImageDocumentProcessor implements DocumentProcessorInterface
 
     public function process(Document $document): array
     {
-        Log::info('Processing image document', [
+        $this->logger->info('Processing image document', [
             'document_id' => $document->id,
             'mime_type' => $document->mime_type,
         ]);
@@ -39,7 +46,7 @@ class ImageDocumentProcessor implements DocumentProcessorInterface
         // If OCR extracts text, we can run Comprehend on it
         // But we'll let the Textract job handle scheduling Comprehend based on results
         
-        Log::info('Created processing jobs for image document', [
+        $this->logger->info('Created processing jobs for image document', [
             'document_id' => $document->id,
             'job_count' => count($jobs),
         ]);

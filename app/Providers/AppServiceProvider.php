@@ -18,6 +18,7 @@ use Aws\Comprehend\ComprehendClient;
 use Aws\S3\S3Client;
 use Aws\Textract\TextractClient;
 use Illuminate\Support\ServiceProvider;
+use Psr\Log\LoggerInterface;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $logger = $this->app->make(LoggerInterface::class);
+        
         // AWS S3 Service
         $this->app->singleton(S3Client::class, function () {
             return new S3Client([
@@ -57,10 +60,10 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
         
-        $this->app->singleton(DocumentAnalysisServiceInterface::class, function ($app) {
+        $this->app->singleton(DocumentAnalysisServiceInterface::class, function ($app) use ($logger) {
             return new TextractService(
                 $app->make(TextractClient::class),
-                $app->make('log')
+                $logger
             );
         });
         
@@ -76,21 +79,20 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
         
-        $this->app->singleton(TextAnalysisServiceInterface::class, function ($app) {
+        $this->app->singleton(TextAnalysisServiceInterface::class, function ($app) use ($logger) {
             return new ComprehendService(
                 $app->make(ComprehendClient::class),
-                $app->make('log')
+                $logger
             );
         });
         
         // Document Processing Strategies
-        $this->app->singleton(DocumentProcessorManager::class, function ($app) {
-            $manager = new DocumentProcessorManager($app->make('log'));
-            
-            // Register processors in priority order
-            $manager->register(new PdfDocumentProcessor());
-            $manager->register(new ImageDocumentProcessor());
-            $manager->register(new TextDocumentProcessor());
+        $this->app->singleton(DocumentProcessorManager::class, function ($app) use ($logger) {
+            $manager = new DocumentProcessorManager($logger);
+
+            $manager->register(new PdfDocumentProcessor($logger));
+            $manager->register(new ImageDocumentProcessor($logger));
+            $manager->register(new TextDocumentProcessor($logger));
             
             return $manager;
         });
