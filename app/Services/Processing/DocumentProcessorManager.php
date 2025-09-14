@@ -5,7 +5,8 @@ namespace App\Services\Processing;
 use App\Contracts\Processing\DocumentProcessorInterface;
 use App\Models\Document;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class DocumentProcessorManager
 {
@@ -14,9 +15,12 @@ class DocumentProcessorManager
      */
     private Collection $processors;
 
-    public function __construct()
+    private LoggerInterface $logger;
+
+    public function __construct(?LoggerInterface $logger = null)
     {
         $this->processors = collect();
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**
@@ -31,7 +35,7 @@ class DocumentProcessorManager
             return $processor->getPriority();
         });
 
-        Log::debug('Registered document processor', [
+        $this->logger->debug('Registered document processor', [
             'processor' => get_class($processor),
             'priority' => $processor->getPriority(),
             'supported_types' => $processor->getSupportedMimeTypes(),
@@ -53,7 +57,7 @@ class DocumentProcessorManager
     {
         foreach ($this->processors as $processor) {
             if ($processor->canProcess($document)) {
-                Log::info('Found processor for document', [
+                $this->logger->info('Found processor for document', [
                     'document_id' => $document->id,
                     'processor' => get_class($processor),
                     'mime_type' => $document->mime_type,
@@ -63,7 +67,7 @@ class DocumentProcessorManager
             }
         }
 
-        Log::warning('No processor found for document', [
+        $this->logger->warning('No processor found for document', [
             'document_id' => $document->id,
             'mime_type' => $document->mime_type,
             'available_processors' => $this->processors->count(),
@@ -85,7 +89,7 @@ class DocumentProcessorManager
             );
         }
 
-        Log::info('Processing document with strategy', [
+        $this->logger->info('Processing document with strategy', [
             'document_id' => $document->id,
             'processor' => get_class($processor),
             'strategy' => 'document_processor_pattern',

@@ -59,7 +59,8 @@ class AppServiceProvider extends ServiceProvider
         
         $this->app->singleton(DocumentAnalysisServiceInterface::class, function ($app) {
             return new TextractService(
-                $app->make(TextractClient::class)
+                $app->make(TextractClient::class),
+                $app->make('log')
             );
         });
         
@@ -77,13 +78,14 @@ class AppServiceProvider extends ServiceProvider
         
         $this->app->singleton(TextAnalysisServiceInterface::class, function ($app) {
             return new ComprehendService(
-                $app->make(ComprehendClient::class)
+                $app->make(ComprehendClient::class),
+                $app->make('log')
             );
         });
         
         // Document Processing Strategies
         $this->app->singleton(DocumentProcessorManager::class, function ($app) {
-            $manager = new DocumentProcessorManager();
+            $manager = new DocumentProcessorManager($app->make('log'));
             
             // Register processors in priority order
             $manager->register(new PdfDocumentProcessor());

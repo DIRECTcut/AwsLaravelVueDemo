@@ -6,12 +6,14 @@ use App\Contracts\Aws\DocumentAnalysisServiceInterface;
 use App\Exceptions\Aws\DocumentAnalysisException;
 use Aws\Exception\AwsException;
 use Aws\Textract\TextractClient;
-use Illuminate\Support\Facades\Log;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class TextractService implements DocumentAnalysisServiceInterface
 {
     public function __construct(
-        private TextractClient $textractClient
+        private TextractClient $textractClient,
+        private LoggerInterface $logger = new NullLogger()
     ) {}
 
     /**
@@ -33,14 +35,14 @@ class TextractService implements DocumentAnalysisServiceInterface
                 ],
             ]);
 
-            Log::info('Started Textract text detection job', [
+            $this->logger->info('Started Textract text detection job', [
                 's3_key' => $s3Key,
                 'job_id' => $result['JobId'],
             ]);
 
             return $result['JobId'];
         } catch (AwsException $e) {
-            Log::error('Failed to start Textract text detection', [
+            $this->logger->error('Failed to start Textract text detection', [
                 's3_key' => $s3Key,
                 'error' => $e->getMessage(),
                 'aws_error_code' => $e->getAwsErrorCode(),
@@ -65,7 +67,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             ]);
 
             if ($result['JobStatus'] === 'SUCCEEDED') {
-                Log::info('Retrieved Textract text detection results', [
+                $this->logger->info('Retrieved Textract text detection results', [
                     'job_id' => $jobId,
                     'blocks_count' => count($result['Blocks'] ?? []),
                 ]);
@@ -74,7 +76,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             }
 
             if ($result['JobStatus'] === 'FAILED') {
-                Log::error('Textract text detection job failed', [
+                $this->logger->error('Textract text detection job failed', [
                     'job_id' => $jobId,
                     'status_message' => $result['StatusMessage'] ?? 'Unknown error',
                 ]);
@@ -85,7 +87,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             }
 
             if ($result['JobStatus'] === 'PARTIAL_SUCCESS') {
-                Log::warning('Textract text detection partially succeeded', [
+                $this->logger->warning('Textract text detection partially succeeded', [
                     'job_id' => $jobId,
                     'status_message' => $result['StatusMessage'] ?? 'Some pages could not be processed',
                     'warnings' => $result['Warnings'] ?? [],
@@ -103,7 +105,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             // Job is still IN_PROGRESS
             return null;
         } catch (AwsException $e) {
-            Log::error('Failed to get Textract text detection results', [
+            $this->logger->error('Failed to get Textract text detection results', [
                 'job_id' => $jobId,
                 'error' => $e->getMessage(),
                 'aws_error_code' => $e->getAwsErrorCode(),
@@ -132,14 +134,14 @@ class TextractService implements DocumentAnalysisServiceInterface
                 ],
             ]);
 
-            Log::info('Completed synchronous Textract text detection', [
+            $this->logger->info('Completed synchronous Textract text detection', [
                 's3_key' => $s3Key,
                 'blocks_count' => count($result['Blocks'] ?? []),
             ]);
 
             return $result->toArray();
         } catch (AwsException $e) {
-            Log::error('Failed to detect document text', [
+            $this->logger->error('Failed to detect document text', [
                 's3_key' => $s3Key,
                 'error' => $e->getMessage(),
                 'aws_error_code' => $e->getAwsErrorCode(),
@@ -193,7 +195,7 @@ class TextractService implements DocumentAnalysisServiceInterface
                 'FeatureTypes' => $featureTypes,
             ]);
 
-            Log::info('Completed Textract document analysis', [
+            $this->logger->info('Completed Textract document analysis', [
                 's3_key' => $s3Key,
                 'feature_types' => $featureTypes,
                 'blocks_count' => count($result['Blocks'] ?? []),
@@ -201,7 +203,7 @@ class TextractService implements DocumentAnalysisServiceInterface
 
             return $result->toArray();
         } catch (AwsException $e) {
-            Log::error('Failed to analyze document', [
+            $this->logger->error('Failed to analyze document', [
                 's3_key' => $s3Key,
                 'feature_types' => $featureTypes,
                 'error' => $e->getMessage(),
@@ -244,7 +246,7 @@ class TextractService implements DocumentAnalysisServiceInterface
                 ],
             ]);
 
-            Log::info('Started Textract document analysis job', [
+            $this->logger->info('Started Textract document analysis job', [
                 's3_key' => $s3Key,
                 'feature_types' => $featureTypes,
                 'job_id' => $result['JobId'],
@@ -252,7 +254,7 @@ class TextractService implements DocumentAnalysisServiceInterface
 
             return $result['JobId'];
         } catch (AwsException $e) {
-            Log::error('Failed to start document analysis', [
+            $this->logger->error('Failed to start document analysis', [
                 's3_key' => $s3Key,
                 'feature_types' => $featureTypes,
                 'error' => $e->getMessage(),
@@ -278,7 +280,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             ]);
 
             if ($result['JobStatus'] === 'SUCCEEDED') {
-                Log::info('Retrieved Textract analysis results', [
+                $this->logger->info('Retrieved Textract analysis results', [
                     'job_id' => $jobId,
                     'blocks_count' => count($result['Blocks'] ?? []),
                 ]);
@@ -287,7 +289,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             }
 
             if ($result['JobStatus'] === 'FAILED') {
-                Log::error('Textract analysis job failed', [
+                $this->logger->error('Textract analysis job failed', [
                     'job_id' => $jobId,
                     'status_message' => $result['StatusMessage'] ?? 'Unknown error',
                 ]);
@@ -298,7 +300,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             }
 
             if ($result['JobStatus'] === 'PARTIAL_SUCCESS') {
-                Log::warning('Textract analysis partially succeeded', [
+                $this->logger->warning('Textract analysis partially succeeded', [
                     'job_id' => $jobId,
                     'status_message' => $result['StatusMessage'] ?? 'Some pages could not be analyzed',
                     'warnings' => $result['Warnings'] ?? [],
@@ -316,7 +318,7 @@ class TextractService implements DocumentAnalysisServiceInterface
             // Job is still IN_PROGRESS
             return null;
         } catch (AwsException $e) {
-            Log::error('Failed to get document analysis results', [
+            $this->logger->error('Failed to get document analysis results', [
                 'job_id' => $jobId,
                 'error' => $e->getMessage(),
                 'aws_error_code' => $e->getAwsErrorCode(),

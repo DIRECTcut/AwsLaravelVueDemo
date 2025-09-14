@@ -6,12 +6,14 @@ use App\Contracts\Aws\TextAnalysisServiceInterface;
 use App\Exceptions\Aws\TextAnalysisException;
 use Aws\Comprehend\ComprehendClient;
 use Aws\Exception\AwsException;
-use Illuminate\Support\Facades\Log;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class ComprehendService implements TextAnalysisServiceInterface
 {
     public function __construct(
-        private ComprehendClient $comprehendClient
+        private ComprehendClient $comprehendClient,
+        private LoggerInterface $logger = new NullLogger()
     ) {}
 
     /**
@@ -25,7 +27,7 @@ class ComprehendService implements TextAnalysisServiceInterface
                 'LanguageCode' => $languageCode,
             ]);
 
-            Log::info('Detected sentiment', [
+            $this->logger->info('Detected sentiment', [
                 'sentiment' => $result['Sentiment'],
                 'scores' => $result['SentimentScore'],
                 'language' => $languageCode,
@@ -33,7 +35,7 @@ class ComprehendService implements TextAnalysisServiceInterface
 
             return $result->toArray();
         } catch (AwsException $e) {
-            Log::error('Failed to detect sentiment', [
+            $this->logger->error('Failed to detect sentiment', [
                 'error' => $e->getMessage(),
                 'aws_error_code' => $e->getAwsErrorCode(),
             ]);
@@ -73,14 +75,14 @@ class ComprehendService implements TextAnalysisServiceInterface
                 'LanguageCode' => $languageCode,
             ]);
 
-            Log::info('Detected entities', [
+            $this->logger->info('Detected entities', [
                 'entity_count' => count($result['Entities'] ?? []),
                 'language' => $languageCode,
             ]);
 
             return $result->toArray();
         } catch (AwsException $e) {
-            Log::error('Failed to detect entities', [
+            $this->logger->error('Failed to detect entities', [
                 'error' => $e->getMessage(),
                 'aws_error_code' => $e->getAwsErrorCode(),
             ]);
@@ -112,14 +114,14 @@ class ComprehendService implements TextAnalysisServiceInterface
                 'LanguageCode' => $languageCode,
             ]);
 
-            Log::info('Detected key phrases', [
+            $this->logger->info('Detected key phrases', [
                 'phrase_count' => count($result['KeyPhrases'] ?? []),
                 'language' => $languageCode,
             ]);
 
             return $result->toArray();
         } catch (AwsException $e) {
-            Log::error('Failed to detect key phrases', [
+            $this->logger->error('Failed to detect key phrases', [
                 'error' => $e->getMessage(),
                 'aws_error_code' => $e->getAwsErrorCode(),
             ]);
@@ -144,7 +146,7 @@ class ComprehendService implements TextAnalysisServiceInterface
 
             $languages = $result['Languages'] ?? [];
             if (!empty($languages)) {
-                Log::info('Detected languages', [
+                $this->logger->info('Detected languages', [
                     'primary_language' => $languages[0]['LanguageCode'] ?? 'unknown',
                     'confidence' => $languages[0]['Score'] ?? 0,
                     'total_detected' => count($languages),
@@ -153,7 +155,7 @@ class ComprehendService implements TextAnalysisServiceInterface
 
             return $result->toArray();
         } catch (AwsException $e) {
-            Log::error('Failed to detect language', [
+            $this->logger->error('Failed to detect language', [
                 'error' => $e->getMessage(),
                 'aws_error_code' => $e->getAwsErrorCode(),
             ]);
@@ -184,14 +186,14 @@ class ComprehendService implements TextAnalysisServiceInterface
                 'JobName' => 'entities-detection-' . time(),
             ]);
 
-            Log::info('Started entities detection job', [
+            $this->logger->info('Started entities detection job', [
                 'job_id' => $result['JobId'],
                 'job_arn' => $result['JobArn'] ?? null,
             ]);
 
             return $result['JobId'];
         } catch (AwsException $e) {
-            Log::error('Failed to start entities detection job', [
+            $this->logger->error('Failed to start entities detection job', [
                 'error' => $e->getMessage(),
                 'aws_error_code' => $e->getAwsErrorCode(),
             ]);
@@ -230,14 +232,14 @@ class ComprehendService implements TextAnalysisServiceInterface
                 'JobName' => 'sentiment-detection-' . time(),
             ]);
 
-            Log::info('Started sentiment detection job', [
+            $this->logger->info('Started sentiment detection job', [
                 'job_id' => $result['JobId'],
                 'job_arn' => $result['JobArn'] ?? null,
             ]);
 
             return $result['JobId'];
         } catch (AwsException $e) {
-            Log::error('Failed to start sentiment detection job', [
+            $this->logger->error('Failed to start sentiment detection job', [
                 'error' => $e->getMessage(),
                 'aws_error_code' => $e->getAwsErrorCode(),
             ]);
@@ -262,14 +264,14 @@ class ComprehendService implements TextAnalysisServiceInterface
 
             $jobDetails = $result['EntitiesDetectionJobProperties'] ?? [];
             
-            Log::info('Retrieved entities detection job details', [
+            $this->logger->info('Retrieved entities detection job details', [
                 'job_id' => $jobId,
                 'status' => $jobDetails['JobStatus'] ?? 'UNKNOWN',
             ]);
 
             return $jobDetails;
         } catch (AwsException $e) {
-            Log::error('Failed to describe entities detection job', [
+            $this->logger->error('Failed to describe entities detection job', [
                 'job_id' => $jobId,
                 'error' => $e->getMessage(),
                 'aws_error_code' => $e->getAwsErrorCode(),
@@ -303,14 +305,14 @@ class ComprehendService implements TextAnalysisServiceInterface
 
             $jobDetails = $result['SentimentDetectionJobProperties'] ?? [];
             
-            Log::info('Retrieved sentiment detection job details', [
+            $this->logger->info('Retrieved sentiment detection job details', [
                 'job_id' => $jobId,
                 'status' => $jobDetails['JobStatus'] ?? 'UNKNOWN',
             ]);
 
             return $jobDetails;
         } catch (AwsException $e) {
-            Log::error('Failed to describe sentiment detection job', [
+            $this->logger->error('Failed to describe sentiment detection job', [
                 'job_id' => $jobId,
                 'error' => $e->getMessage(),
                 'aws_error_code' => $e->getAwsErrorCode(),
@@ -353,7 +355,7 @@ class ComprehendService implements TextAnalysisServiceInterface
         
         $truncated = mb_substr($text, 0, $charLimit);
         
-        Log::warning('Text truncated for Comprehend analysis', [
+        $this->logger->warning('Text truncated for Comprehend analysis', [
             'original_bytes' => $textBytes,
             'max_bytes' => $maxBytes,
             'truncated_chars' => $charLimit,
