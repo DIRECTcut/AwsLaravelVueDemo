@@ -16,6 +16,7 @@ class DocumentProcessingStatusUpdatedTest extends TestCase
 
     public function test_event_broadcasts_on_correct_channels(): void
     {
+        // Arrange
         $user = User::factory()->create();
         $document = Document::factory()->for($user)->create();
 
@@ -25,8 +26,10 @@ class DocumentProcessingStatusUpdatedTest extends TestCase
             'Test message'
         );
 
+        // Act
         $channels = $event->broadcastOn();
 
+        // Assert
         $this->assertCount(2, $channels);
         $this->assertInstanceOf(PrivateChannel::class, $channels[0]);
         $this->assertInstanceOf(PrivateChannel::class, $channels[1]);
@@ -36,6 +39,7 @@ class DocumentProcessingStatusUpdatedTest extends TestCase
 
     public function test_event_includes_correct_broadcast_data(): void
     {
+        // Arrange
         $user = User::factory()->create();
         $document = Document::factory()->for($user)->create([
             'title' => 'Test Document',
@@ -48,8 +52,10 @@ class DocumentProcessingStatusUpdatedTest extends TestCase
             ['confidence' => 0.95]
         );
 
+        // Act
         $data = $event->broadcastWith();
 
+        // Assert
         $this->assertEquals($document->id, $data['document_id']);
         $this->assertEquals('Test Document', $data['document_title']);
         $this->assertEquals('completed', $data['status']);
@@ -62,6 +68,7 @@ class DocumentProcessingStatusUpdatedTest extends TestCase
 
     public function test_event_uses_correct_broadcast_name(): void
     {
+        // Arrange
         $user = User::factory()->create();
         $document = Document::factory()->for($user)->create();
 
@@ -70,27 +77,29 @@ class DocumentProcessingStatusUpdatedTest extends TestCase
             ProcessingStatus::PROCESSING
         );
 
+        // Act & Assert
         $this->assertEquals('document.status.updated', $event->broadcastAs());
     }
 
     public function test_progress_calculation_with_no_jobs(): void
     {
+        // Arrange
         $user = User::factory()->create();
         $document = Document::factory()->for($user)->create();
 
+        // Act & Assert - Processing status
         $event = new DocumentProcessingStatusUpdated(
             $document,
             ProcessingStatus::PROCESSING
         );
-
         $data = $event->broadcastWith();
         $this->assertEquals(50, $data['progress']);
 
+        // Act & Assert - Completed status
         $event = new DocumentProcessingStatusUpdated(
             $document,
             ProcessingStatus::COMPLETED
         );
-
         $data = $event->broadcastWith();
         $this->assertEquals(100, $data['progress']);
     }

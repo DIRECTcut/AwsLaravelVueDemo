@@ -16,16 +16,23 @@ afterEach(function () {
 
 describe('FakeComprehendService Interface Compliance', function () {
     test('implements TextAnalysisServiceInterface', function () {
+        // Arrange - service created in beforeEach
+
+        // Act & Assert
         expect($this->service)->toBeInstanceOf(TextAnalysisServiceInterface::class);
     });
 });
 
 describe('Sentiment Detection', function () {
     test('detectSentiment returns valid structure', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $sampleText = 'Sample text';
 
-        $result = $this->service->detectSentiment('Sample text');
+        // Act
+        $result = $this->service->detectSentiment($sampleText);
 
+        // Assert
         expect($result)->toBeArray()
             ->toHaveKey('sentiment', 'POSITIVE')
             ->toHaveKey('scores');
@@ -41,23 +48,32 @@ describe('Sentiment Detection', function () {
     });
 
     test('detectSentiment accepts language code parameter', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once()->with('[FAKE] Comprehend detectSentiment called', [
             'text_length' => 11,
             'language_code' => 'es',
         ]);
+        $sampleText = 'Sample text';
+        $languageCode = 'es';
 
-        $result = $this->service->detectSentiment('Sample text', 'es');
+        // Act
+        $result = $this->service->detectSentiment($sampleText, $languageCode);
 
+        // Assert
         expect($result)->toBeArray()->toHaveKey('sentiment');
     });
 });
 
 describe('Entity Detection', function () {
     test('detectEntities returns valid structure', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $sampleText = 'Sample text';
 
-        $result = $this->service->detectEntities('Sample text');
+        // Act
+        $result = $this->service->detectEntities($sampleText);
 
+        // Assert
         expect($result)->toBeArray();
 
         foreach ($result as $entity) {
@@ -73,23 +89,32 @@ describe('Entity Detection', function () {
     });
 
     test('detectEntities accepts language code parameter', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once()->with('[FAKE] Comprehend detectEntities called', [
             'text_length' => 11,
             'language_code' => 'fr',
         ]);
+        $sampleText = 'Sample text';
+        $languageCode = 'fr';
 
-        $result = $this->service->detectEntities('Sample text', 'fr');
+        // Act
+        $result = $this->service->detectEntities($sampleText, $languageCode);
 
+        // Assert
         expect($result)->toBeArray();
     });
 });
 
 describe('Key Phrase Detection', function () {
     test('detectKeyPhrases returns valid structure', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $sampleText = 'Sample text';
 
-        $result = $this->service->detectKeyPhrases('Sample text');
+        // Act
+        $result = $this->service->detectKeyPhrases($sampleText);
 
+        // Assert
         expect($result)->toBeArray();
 
         foreach ($result as $phrase) {
@@ -104,23 +129,32 @@ describe('Key Phrase Detection', function () {
     });
 
     test('detectKeyPhrases accepts language code parameter', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once()->with('[FAKE] Comprehend detectKeyPhrases called', [
             'text_length' => 11,
             'language_code' => 'de',
         ]);
+        $sampleText = 'Sample text';
+        $languageCode = 'de';
 
-        $result = $this->service->detectKeyPhrases('Sample text', 'de');
+        // Act
+        $result = $this->service->detectKeyPhrases($sampleText, $languageCode);
 
+        // Assert
         expect($result)->toBeArray();
     });
 });
 
 describe('Language Detection', function () {
     test('detectLanguage returns valid structure', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $sampleText = 'Sample text';
 
-        $result = $this->service->detectLanguage('Sample text');
+        // Act
+        $result = $this->service->detectLanguage($sampleText);
 
+        // Assert
         expect($result)->toBeArray()
             ->toHaveKey('languages');
 
@@ -138,28 +172,44 @@ describe('Language Detection', function () {
 
 describe('Batch Job Operations', function () {
     test('startEntitiesDetectionJob returns job ID', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $inputList = [];
+        $outputList = [];
+        $dataAccessRoleArn = 'arn:aws:iam::123:role/test';
 
-        $jobId = $this->service->startEntitiesDetectionJob([], [], 'arn:aws:iam::123:role/test');
+        // Act
+        $jobId = $this->service->startEntitiesDetectionJob($inputList, $outputList, $dataAccessRoleArn);
 
+        // Assert
         expect($jobId)->toBeString()
             ->toStartWith('fake-entities-job-');
     });
 
     test('startSentimentDetectionJob returns job ID', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $inputList = [];
+        $outputList = [];
+        $dataAccessRoleArn = 'arn:aws:iam::123:role/test';
 
-        $jobId = $this->service->startSentimentDetectionJob([], [], 'arn:aws:iam::123:role/test');
+        // Act
+        $jobId = $this->service->startSentimentDetectionJob($inputList, $outputList, $dataAccessRoleArn);
 
+        // Assert
         expect($jobId)->toBeString()
             ->toStartWith('fake-sentiment-job-');
     });
 
     test('describeEntitiesDetectionJob returns valid structure', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->twice(); // One for describe, one for detectEntities
+        $jobId = 'fake-job-123';
 
-        $result = $this->service->describeEntitiesDetectionJob('fake-job-123');
+        // Act
+        $result = $this->service->describeEntitiesDetectionJob($jobId);
 
+        // Assert
         expect($result)->toBeArray()
             ->toHaveKeys(['status', 'entities']);
 
@@ -168,10 +218,14 @@ describe('Batch Job Operations', function () {
     });
 
     test('describeSentimentDetectionJob returns valid structure', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->twice(); // One for describe, one for detectSentiment
+        $jobId = 'fake-job-123';
 
-        $result = $this->service->describeSentimentDetectionJob('fake-job-123');
+        // Act
+        $result = $this->service->describeSentimentDetectionJob($jobId);
 
+        // Assert
         expect($result)->toBeArray()
             ->toHaveKeys(['status', 'sentiment']);
 
@@ -182,16 +236,18 @@ describe('Batch Job Operations', function () {
 
 describe('Data Structure Consistency', function () {
     test('returned data matches expected AWS Comprehend format', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->atLeast()->once();
+        $testText = 'test';
 
-        // Test sentiment structure matches AWS format
-        $sentiment = $this->service->detectSentiment('test');
+        // Act & Assert - Test sentiment structure matches AWS format
+        $sentiment = $this->service->detectSentiment($testText);
         expect($sentiment)->toHaveKeys(['sentiment', 'scores']);
         expect($sentiment['sentiment'])->toBeString();
         expect($sentiment['scores'])->toBeArray();
 
-        // Test entities structure matches AWS format
-        $entities = $this->service->detectEntities('test');
+        // Act & Assert - Test entities structure matches AWS format
+        $entities = $this->service->detectEntities($testText);
         expect($entities[0])->toHaveKeys(['text', 'type', 'score', 'begin_offset', 'end_offset']);
         expect($entities[0]['text'])->toBeString();
         expect($entities[0]['type'])->toBeString();
@@ -199,16 +255,16 @@ describe('Data Structure Consistency', function () {
         expect($entities[0]['begin_offset'])->toBeInt();
         expect($entities[0]['end_offset'])->toBeInt();
 
-        // Test key phrases structure matches AWS format
-        $phrases = $this->service->detectKeyPhrases('test');
+        // Act & Assert - Test key phrases structure matches AWS format
+        $phrases = $this->service->detectKeyPhrases($testText);
         expect($phrases[0])->toHaveKeys(['text', 'score', 'begin_offset', 'end_offset']);
         expect($phrases[0]['text'])->toBeString();
         expect($phrases[0]['score'])->toBeFloat();
         expect($phrases[0]['begin_offset'])->toBeInt();
         expect($phrases[0]['end_offset'])->toBeInt();
 
-        // Test language detection structure matches AWS format
-        $languages = $this->service->detectLanguage('test');
+        // Act & Assert - Test language detection structure matches AWS format
+        $languages = $this->service->detectLanguage($testText);
         expect($languages)->toHaveKey('languages');
         expect($languages['languages'][0])->toHaveKeys(['language_code', 'score']);
         expect($languages['languages'][0]['language_code'])->toBeString();

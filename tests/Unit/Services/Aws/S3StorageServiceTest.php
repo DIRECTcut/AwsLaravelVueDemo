@@ -20,6 +20,7 @@ afterEach(function () {
 
 describe('Basic Operations', function () {
     test('can upload file to S3', function () {
+        // Arrange
         $file = UploadedFile::fake()->create('document.pdf', 1024);
         $path = 'documents/test';
         $metadata = ['user_id' => '123'];
@@ -33,13 +34,16 @@ describe('Basic Operations', function () {
             }))
             ->andReturn(['ObjectURL' => 'https://test-bucket.s3.amazonaws.com/documents/test/document.pdf']);
 
+        // Act
         $result = $this->service->uploadFile($file, $path, $metadata);
 
+        // Assert
         expect($result)->toBeString();
         expect($result)->toContain($path);
     });
 
     test('can check if file exists', function () {
+        // Arrange
         $key = 'documents/test.pdf';
 
         $this->s3Client->shouldReceive('doesObjectExist')
@@ -47,12 +51,15 @@ describe('Basic Operations', function () {
             ->with($this->bucket, $key)
             ->andReturn(true);
 
+        // Act
         $result = $this->service->fileExists($key);
 
+        // Assert
         expect($result)->toBeTrue();
     });
 
     test('can delete file from S3', function () {
+        // Arrange
         $key = 'documents/test.pdf';
 
         $this->s3Client->shouldReceive('deleteObject')
@@ -63,12 +70,15 @@ describe('Basic Operations', function () {
             ])
             ->andReturn(['DeleteMarker' => true]);
 
+        // Act
         $result = $this->service->deleteFile($key);
 
+        // Assert
         expect($result)->toBeTrue();
     });
 
     test('can generate signed URL', function () {
+        // Arrange
         $key = 'documents/test.pdf';
         $expiration = 60;
 
@@ -89,12 +99,15 @@ describe('Basic Operations', function () {
             ->with($command, "+{$expiration} minutes")
             ->andReturn($request);
 
+        // Act
         $result = $this->service->getSignedUrl($key, $expiration);
 
+        // Assert
         expect($result)->toBe('https://signed-url.com');
     });
 
     test('can get file URL', function () {
+        // Arrange
         $key = 'documents/test.pdf';
 
         $this->s3Client->shouldReceive('getObjectUrl')
@@ -102,12 +115,15 @@ describe('Basic Operations', function () {
             ->with($this->bucket, $key)
             ->andReturn('https://test-bucket.s3.amazonaws.com/documents/test.pdf');
 
+        // Act
         $result = $this->service->getFileUrl($key);
 
+        // Assert
         expect($result)->toBe('https://test-bucket.s3.amazonaws.com/documents/test.pdf');
     });
 
     test('can get file metadata', function () {
+        // Arrange
         $key = 'documents/test.pdf';
         $metadata = ['ContentLength' => 1024, 'ContentType' => 'application/pdf'];
 
@@ -122,12 +138,15 @@ describe('Basic Operations', function () {
             ])
             ->andReturn($result);
 
+        // Act
         $result = $this->service->getFileMetadata($key);
 
+        // Assert
         expect($result)->toBe($metadata);
     });
 
     test('returns null when file metadata not found', function () {
+        // Arrange
         $key = 'documents/nonexistent.pdf';
 
         $exception = Mockery::mock(S3Exception::class);
@@ -141,12 +160,15 @@ describe('Basic Operations', function () {
             ])
             ->andThrow($exception);
 
+        // Act
         $result = $this->service->getFileMetadata($key);
 
+        // Assert
         expect($result)->toBeNull();
     });
 
     test('can copy file within S3', function () {
+        // Arrange
         $sourceKey = 'documents/source.pdf';
         $destinationKey = 'documents/destination.pdf';
 
@@ -159,22 +181,27 @@ describe('Basic Operations', function () {
             ])
             ->andReturn(['CopyObjectResult' => ['ETag' => 'test-etag']]);
 
+        // Act
         $result = $this->service->copyFile($sourceKey, $destinationKey);
 
+        // Assert
         expect($result)->toBeTrue();
     });
 });
 
 describe('Error Handling', function () {
     test('throws exception when uploading invalid file', function () {
+        // Arrange
         $file = Mockery::mock(UploadedFile::class);
         $file->shouldReceive('isValid')->andReturn(false);
 
+        // Act & Assert
         expect(fn () => $this->service->uploadFile($file, 'documents'))
             ->toThrow(StorageException::class, 'Invalid file: File upload failed or file is corrupted');
     });
 
     test('throws access denied exception on upload', function () {
+        // Arrange
         $file = UploadedFile::fake()->create('document.pdf', 1024);
 
         $exception = Mockery::mock(S3Exception::class);
@@ -185,11 +212,13 @@ describe('Error Handling', function () {
             ->once()
             ->andThrow($exception);
 
+        // Act & Assert
         expect(fn () => $this->service->uploadFile($file, 'documents'))
             ->toThrow(StorageException::class, 'Access denied for upload operation');
     });
 
     test('throws upload failed exception on AWS error', function () {
+        // Arrange
         $file = UploadedFile::fake()->create('document.pdf', 1024);
 
         $exception = new AwsException('Network timeout', Mockery::mock('Aws\\Command'));
@@ -198,11 +227,13 @@ describe('Error Handling', function () {
             ->once()
             ->andThrow($exception);
 
+        // Act & Assert
         expect(fn () => $this->service->uploadFile($file, 'documents'))
             ->toThrow(StorageException::class, 'Failed to upload file');
     });
 
     test('throws access denied exception on delete', function () {
+        // Arrange
         $key = 'documents/test.pdf';
 
         $exception = Mockery::mock(S3Exception::class);
@@ -213,11 +244,13 @@ describe('Error Handling', function () {
             ->once()
             ->andThrow($exception);
 
+        // Act & Assert
         expect(fn () => $this->service->deleteFile($key))
             ->toThrow(StorageException::class, 'Access denied for delete operation');
     });
 
     test('throws delete failed exception on S3 error', function () {
+        // Arrange
         $key = 'documents/test.pdf';
 
         $exception = new S3Exception('Internal Error', Mockery::mock('Aws\\Command'));
@@ -226,11 +259,13 @@ describe('Error Handling', function () {
             ->once()
             ->andThrow($exception);
 
+        // Act & Assert
         expect(fn () => $this->service->deleteFile($key))
             ->toThrow(StorageException::class, 'Failed to delete file');
     });
 
     test('throws file not found exception on copy', function () {
+        // Arrange
         $sourceKey = 'documents/nonexistent.pdf';
         $destinationKey = 'documents/copy.pdf';
 
@@ -242,11 +277,13 @@ describe('Error Handling', function () {
             ->once()
             ->andThrow($exception);
 
+        // Act & Assert
         expect(fn () => $this->service->copyFile($sourceKey, $destinationKey))
             ->toThrow(StorageException::class, 'File not found');
     });
 
     test('throws access denied exception on copy', function () {
+        // Arrange
         $sourceKey = 'documents/source.pdf';
         $destinationKey = 'documents/copy.pdf';
 
@@ -258,11 +295,13 @@ describe('Error Handling', function () {
             ->once()
             ->andThrow($exception);
 
+        // Act & Assert
         expect(fn () => $this->service->copyFile($sourceKey, $destinationKey))
             ->toThrow(StorageException::class, 'Access denied for copy operation');
     });
 
     test('throws copy failed exception on AWS error', function () {
+        // Arrange
         $sourceKey = 'documents/source.pdf';
         $destinationKey = 'documents/copy.pdf';
 
@@ -272,11 +311,13 @@ describe('Error Handling', function () {
             ->once()
             ->andThrow($exception);
 
+        // Act & Assert
         expect(fn () => $this->service->copyFile($sourceKey, $destinationKey))
             ->toThrow(StorageException::class, 'Failed to copy file');
     });
 
     test('throws access denied exception on metadata retrieval', function () {
+        // Arrange
         $key = 'documents/test.pdf';
 
         $exception = Mockery::mock(S3Exception::class);
@@ -287,11 +328,13 @@ describe('Error Handling', function () {
             ->once()
             ->andThrow($exception);
 
+        // Act & Assert
         expect(fn () => $this->service->getFileMetadata($key))
             ->toThrow(StorageException::class, 'Access denied for metadata operation');
     });
 
     test('throws metadata failed exception on S3 error', function () {
+        // Arrange
         $key = 'documents/test.pdf';
 
         $exception = new S3Exception('Internal Error', Mockery::mock('Aws\\Command'));
@@ -300,6 +343,7 @@ describe('Error Handling', function () {
             ->once()
             ->andThrow($exception);
 
+        // Act & Assert
         expect(fn () => $this->service->getFileMetadata($key))
             ->toThrow(StorageException::class, 'Failed to get metadata');
     });

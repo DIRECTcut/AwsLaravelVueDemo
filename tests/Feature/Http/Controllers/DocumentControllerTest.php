@@ -27,24 +27,29 @@ afterEach(function () {
 
 describe('Document Index', function () {
     test('requires authentication', function () {
+        // Arrange - no setup needed for guest test
+
+        // Act
         $response = $this->get('/documents');
 
+        // Assert
         $response->assertRedirect('/login');
     });
 
     test('can access documents index when authenticated', function () {
+        // Arrange
         Document::factory()->count(3)->create(['user_id' => $this->user->id]);
-
-        // TODO: add Inertia tests after adding Vue components
         $this->actingAs($this->user);
+
+        // Act & Assert - TODO: add Inertia tests after adding Vue components
         $this->assertTrue(true); // Placeholder test
     });
 });
 
 describe('Document Upload', function () {
     test('can upload document', function () {
+        // Arrange
         Queue::fake();
-
         $file = UploadedFile::fake()->create('test.pdf', 1024, 'application/pdf');
         $s3Key = 'documents/1/test-uuid.pdf';
 
@@ -52,6 +57,7 @@ describe('Document Upload', function () {
             ->once()
             ->andReturn($s3Key);
 
+        // Act
         $response = $this->actingAs($this->user)
             ->post('/documents', [
                 'file' => $file,
@@ -61,6 +67,7 @@ describe('Document Upload', function () {
                 'is_public' => false,
             ]);
 
+        // Assert
         $response->assertStatus(302);
         $response->assertRedirect();
         $response->assertSessionHas('success', 'Document uploaded successfully');
@@ -81,29 +88,39 @@ describe('Document Upload', function () {
     });
 
     test('validates file upload requirements', function () {
-        $response = $this->actingAs($this->user)
-            ->postJson('/documents', []);
+        // Arrange
+        $this->actingAs($this->user);
 
+        // Act
+        $response = $this->postJson('/documents', []);
+
+        // Assert
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['file']);
     });
 
     test('validates file size limit', function () {
+        // Arrange
         $file = UploadedFile::fake()->create('large.pdf', 11000); // 11MB
+        $this->actingAs($this->user);
 
-        $response = $this->actingAs($this->user)
-            ->postJson('/documents', ['file' => $file]);
+        // Act
+        $response = $this->postJson('/documents', ['file' => $file]);
 
+        // Assert
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['file']);
     });
 
     test('validates file type', function () {
+        // Arrange
         $file = UploadedFile::fake()->create('test.exe', 1024);
+        $this->actingAs($this->user);
 
-        $response = $this->actingAs($this->user)
-            ->postJson('/documents', ['file' => $file]);
+        // Act
+        $response = $this->postJson('/documents', ['file' => $file]);
 
+        // Assert
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['file']);
     });
@@ -111,18 +128,22 @@ describe('Document Upload', function () {
 
 describe('Document Show', function () {
     test('cannot view other users documents', function () {
+        // Arrange
         $otherUser = User::factory()->create();
         $document = Document::factory()->create(['user_id' => $otherUser->id]);
+        $this->actingAs($this->user);
 
-        $response = $this->actingAs($this->user)
-            ->get("/documents/{$document->id}");
+        // Act
+        $response = $this->get("/documents/{$document->id}");
 
+        // Assert
         $response->assertStatus(404);
     });
 });
 
 describe('Document Download', function () {
     test('can download document', function () {
+        // Arrange
         $document = Document::factory()->create(['user_id' => $this->user->id]);
 
         $this->storageService->shouldReceive('getSignedUrl')
@@ -130,9 +151,12 @@ describe('Document Download', function () {
             ->with($document->s3_key, 10)
             ->andReturn('https://download-url.com');
 
-        $response = $this->actingAs($this->user)
-            ->post("/documents/{$document->id}/download");
+        $this->actingAs($this->user);
 
+        // Act
+        $response = $this->post("/documents/{$document->id}/download");
+
+        // Assert
         $response->assertStatus(200);
         $response->assertJson([
             'download_url' => 'https://download-url.com',

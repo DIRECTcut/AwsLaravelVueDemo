@@ -16,16 +16,24 @@ afterEach(function () {
 
 describe('FakeTextractService Interface Compliance', function () {
     test('implements DocumentAnalysisServiceInterface', function () {
+        // Arrange - service created in beforeEach
+
+        // Act & Assert
         expect($this->service)->toBeInstanceOf(DocumentAnalysisServiceInterface::class);
     });
 });
 
 describe('Document Text Detection', function () {
     test('detectDocumentText returns valid structure', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $s3Key = 'test-key';
+        $s3Bucket = 'test-bucket';
 
-        $result = $this->service->detectDocumentText('test-key', 'test-bucket');
+        // Act
+        $result = $this->service->detectDocumentText($s3Key, $s3Bucket);
 
+        // Assert
         expect($result)->toBeArray()
             ->toHaveKeys(['text', 'Blocks', 'confidence', 'page_count']);
 
@@ -36,10 +44,15 @@ describe('Document Text Detection', function () {
     });
 
     test('detectDocumentText blocks have correct structure', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $s3Key = 'test-key';
+        $s3Bucket = 'test-bucket';
 
-        $result = $this->service->detectDocumentText('test-key', 'test-bucket');
+        // Act
+        $result = $this->service->detectDocumentText($s3Key, $s3Bucket);
 
+        // Assert
         expect($result['Blocks'])->not->toBeEmpty();
 
         foreach ($result['Blocks'] as $block) {
@@ -55,19 +68,30 @@ describe('Document Text Detection', function () {
 
 describe('Document Analysis', function () {
     test('analyzeDocument returns valid structure with default features', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $s3Key = 'test-key';
+        $s3Bucket = 'test-bucket';
 
-        $result = $this->service->analyzeDocument('test-key', 'test-bucket');
+        // Act
+        $result = $this->service->analyzeDocument($s3Key, $s3Bucket);
 
+        // Assert
         expect($result)->toBeArray()
             ->toHaveKeys(['text', 'Blocks', 'confidence', 'page_count', 'tables', 'forms']);
     });
 
     test('analyzeDocument returns tables when TABLES feature requested', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $s3Key = 'test-key';
+        $s3Bucket = 'test-bucket';
+        $features = ['TABLES'];
 
-        $result = $this->service->analyzeDocument('test-key', 'test-bucket', ['TABLES']);
+        // Act
+        $result = $this->service->analyzeDocument($s3Key, $s3Bucket, $features);
 
+        // Assert
         expect($result)->toHaveKey('tables');
         expect($result['tables'])->toBeArray()->not->toBeEmpty();
 
@@ -82,10 +106,16 @@ describe('Document Analysis', function () {
     });
 
     test('analyzeDocument returns forms when FORMS feature requested', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $s3Key = 'test-key';
+        $s3Bucket = 'test-bucket';
+        $features = ['FORMS'];
 
-        $result = $this->service->analyzeDocument('test-key', 'test-bucket', ['FORMS']);
+        // Act
+        $result = $this->service->analyzeDocument($s3Key, $s3Bucket, $features);
 
+        // Assert
         expect($result)->toHaveKey('forms');
         expect($result['forms'])->toBeArray()->not->toBeEmpty();
 
@@ -99,10 +129,16 @@ describe('Document Analysis', function () {
     });
 
     test('analyzeDocument excludes features not requested', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $s3Key = 'test-key';
+        $s3Bucket = 'test-bucket';
+        $features = ['TABLES'];
 
-        $result = $this->service->analyzeDocument('test-key', 'test-bucket', ['TABLES']);
+        // Act
+        $result = $this->service->analyzeDocument($s3Key, $s3Bucket, $features);
 
+        // Assert
         expect($result)->toHaveKey('tables');
         expect($result)->not->toHaveKey('forms');
     });
@@ -110,19 +146,28 @@ describe('Document Analysis', function () {
 
 describe('Asynchronous Operations', function () {
     test('startDocumentTextDetection returns job ID', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $s3Key = 'test-key';
+        $s3Bucket = 'test-bucket';
 
-        $jobId = $this->service->startDocumentTextDetection('test-key', 'test-bucket');
+        // Act
+        $jobId = $this->service->startDocumentTextDetection($s3Key, $s3Bucket);
 
+        // Assert
         expect($jobId)->toBeString()
             ->toStartWith('fake-job-');
     });
 
     test('getDocumentTextDetectionResults returns valid structure', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $jobId = 'fake-job-123';
 
-        $result = $this->service->getDocumentTextDetectionResults('fake-job-123');
+        // Act
+        $result = $this->service->getDocumentTextDetectionResults($jobId);
 
+        // Assert
         expect($result)->toBeArray()
             ->toHaveKeys(['status', 'text', 'Blocks', 'confidence', 'page_count']);
 
@@ -130,19 +175,28 @@ describe('Asynchronous Operations', function () {
     });
 
     test('startDocumentAnalysis returns job ID', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $s3Key = 'test-key';
+        $s3Bucket = 'test-bucket';
 
-        $jobId = $this->service->startDocumentAnalysis('test-key', 'test-bucket');
+        // Act
+        $jobId = $this->service->startDocumentAnalysis($s3Key, $s3Bucket);
 
+        // Assert
         expect($jobId)->toBeString()
             ->toStartWith('fake-analysis-');
     });
 
     test('getDocumentAnalysisResults returns valid structure', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->twice(); // One for getResults, one for analyzeDocument
+        $jobId = 'fake-job-123';
 
-        $result = $this->service->getDocumentAnalysisResults('fake-job-123');
+        // Act
+        $result = $this->service->getDocumentAnalysisResults($jobId);
 
+        // Assert
         expect($result)->toBeArray()
             ->toHaveKeys(['text', 'Blocks', 'confidence', 'page_count']);
     });
@@ -150,15 +204,19 @@ describe('Asynchronous Operations', function () {
 
 describe('Data Structure Consistency for ProcessTextractJob', function () {
     test('returned data structure matches what ProcessTextractJob expects', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $s3Key = 'test-key';
+        $s3Bucket = 'test-bucket';
 
-        $result = $this->service->analyzeDocument('test-key', 'test-bucket');
+        // Act
+        $result = $this->service->analyzeDocument($s3Key, $s3Bucket);
 
-        // Verify the critical 'Blocks' key exists (not 'blocks')
+        // Assert - Verify the critical 'Blocks' key exists (not 'blocks')
         expect($result)->toHaveKey('Blocks');
         expect($result)->not->toHaveKey('blocks');
 
-        // Verify blocks structure matches what ProcessTextractJob processes
+        // Assert - Verify blocks structure matches what ProcessTextractJob processes
         expect($result['Blocks'])->toBeArray();
 
         foreach ($result['Blocks'] as $block) {
@@ -168,11 +226,15 @@ describe('Data Structure Consistency for ProcessTextractJob', function () {
     });
 
     test('blocks structure allows ProcessTextractJob to extract text_blocks', function () {
+        // Arrange
         $this->logger->shouldReceive('info')->once();
+        $s3Key = 'test-key';
+        $s3Bucket = 'test-bucket';
 
-        $result = $this->service->analyzeDocument('test-key', 'test-bucket');
+        // Act
+        $result = $this->service->analyzeDocument($s3Key, $s3Bucket);
 
-        // Simulate what ProcessTextractJob does
+        // Act & Assert - Simulate what ProcessTextractJob does
         $textBlocks = [];
         foreach ($result['Blocks'] ?? [] as $block) {
             if ($block['BlockType'] === 'LINE') {

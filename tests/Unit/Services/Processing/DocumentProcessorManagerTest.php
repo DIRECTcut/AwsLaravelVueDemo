@@ -10,14 +10,18 @@ beforeEach(function () {
 describe('DocumentProcessorManager', function () {
     describe('getSupportedMimeTypes', function () {
         test('returns empty array when no processors registered', function () {
+            // Arrange - manager is already created in beforeEach
+
+            // Act
             $mimeTypes = $this->manager->getSupportedMimeTypes();
 
+            // Assert
             expect($mimeTypes)->toBeArray();
             expect($mimeTypes)->toBeEmpty();
         });
 
         test('returns unique sorted mime types from all processors', function () {
-            // Create mock processors with overlapping mime types
+            // Arrange
             $processor1 = Mockery::mock(DocumentProcessorInterface::class);
             $processor1->shouldReceive('getSupportedMimeTypes')
                 ->andReturn(['application/pdf', 'image/jpeg', 'text/plain']);
@@ -33,14 +37,10 @@ describe('DocumentProcessorManager', function () {
                 ->andReturn(['application/json', 'application/pdf']); // application/pdf is duplicate
             $processor3->shouldReceive('getPriority')->andReturn(15);
 
-            // Register processors
             $this->manager->register($processor1);
             $this->manager->register($processor2);
             $this->manager->register($processor3);
 
-            $mimeTypes = $this->manager->getSupportedMimeTypes();
-
-            // Should be unique and sorted
             $expected = [
                 'application/json',
                 'application/pdf',
@@ -50,11 +50,16 @@ describe('DocumentProcessorManager', function () {
                 'text/plain',
             ];
 
+            // Act
+            $mimeTypes = $this->manager->getSupportedMimeTypes();
+
+            // Assert
             expect($mimeTypes)->toEqual($expected);
             expect($mimeTypes)->toHaveCount(6); // No duplicates
         });
 
         test('handles processor with empty mime types', function () {
+            // Arrange
             $processor1 = Mockery::mock(DocumentProcessorInterface::class);
             $processor1->shouldReceive('getSupportedMimeTypes')
                 ->andReturn(['application/pdf']);
@@ -68,12 +73,15 @@ describe('DocumentProcessorManager', function () {
             $this->manager->register($processor1);
             $this->manager->register($processor2);
 
+            // Act
             $mimeTypes = $this->manager->getSupportedMimeTypes();
 
+            // Assert
             expect($mimeTypes)->toEqual(['application/pdf']);
         });
 
         test('handles single processor', function () {
+            // Arrange
             $processor = Mockery::mock(DocumentProcessorInterface::class);
             $processor->shouldReceive('getSupportedMimeTypes')
                 ->andReturn(['text/plain', 'text/csv', 'application/json']);
@@ -81,12 +89,15 @@ describe('DocumentProcessorManager', function () {
 
             $this->manager->register($processor);
 
+            // Act
             $mimeTypes = $this->manager->getSupportedMimeTypes();
 
+            // Assert
             expect($mimeTypes)->toEqual(['application/json', 'text/csv', 'text/plain']);
         });
 
         test('returns values not keys when flattening', function () {
+            // Arrange
             $processor = Mockery::mock(DocumentProcessorInterface::class);
             $processor->shouldReceive('getSupportedMimeTypes')
                 ->andReturn([
@@ -98,20 +109,20 @@ describe('DocumentProcessorManager', function () {
 
             $this->manager->register($processor);
 
+            // Act
             $mimeTypes = $this->manager->getSupportedMimeTypes();
 
-            // Should be re-indexed with values()
+            // Assert
             expect($mimeTypes)->toEqual([
                 0 => 'application/pdf',
                 1 => 'image/jpeg',
                 2 => 'text/plain',
             ]);
-
-            // Ensure keys are sequential
             expect(array_keys($mimeTypes))->toEqual([0, 1, 2]);
         });
 
         test('maintains alphabetical order', function () {
+            // Arrange
             $processor = Mockery::mock(DocumentProcessorInterface::class);
             $processor->shouldReceive('getSupportedMimeTypes')
                 ->andReturn([
@@ -126,9 +137,10 @@ describe('DocumentProcessorManager', function () {
 
             $this->manager->register($processor);
 
+            // Act
             $mimeTypes = $this->manager->getSupportedMimeTypes();
 
-            // Should be alphabetically sorted
+            // Assert
             expect($mimeTypes)->toEqual([
                 'application/json',
                 'application/pdf',
