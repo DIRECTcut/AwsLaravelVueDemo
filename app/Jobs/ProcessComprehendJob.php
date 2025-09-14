@@ -106,9 +106,9 @@ class ProcessComprehendJob implements ShouldQueue
 
     private function extractDocumentText($document): string
     {
-        // Try to get text from Textract results first
+        // Try to get text from any Textract results first
         $textractResult = $document->analysisResults()
-            ->where('analysis_type', 'textract_text')
+            ->whereIn('analysis_type', ['textract_text', 'textract_analysis'])
             ->first();
 
         if ($textractResult && isset($textractResult->processed_data['text_blocks'])) {

@@ -8,6 +8,7 @@ use App\Http\Requests\StoreDocumentRequest;
 use App\Jobs\ProcessDocumentJob;
 use App\ProcessingStatus;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -40,7 +41,7 @@ class DocumentController extends Controller
         ]);
     }
 
-    public function store(StoreDocumentRequest $request): JsonResponse
+    public function store(StoreDocumentRequest $request): RedirectResponse
     {
         try {
             $user = Auth::user();
@@ -75,16 +76,13 @@ class DocumentController extends Controller
 
             ProcessDocumentJob::dispatch($document->id);
 
-            return response()->json([
-                'message' => 'Document uploaded successfully',
-                'document' => $document->load('user'),
-            ], 201);
+            return back()->with('success', 'Document uploaded successfully')
+                ->with('document', $document->load('user'));
 
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to upload document',
-                'error' => $e->getMessage(),
-            ], 500);
+            return back()->withErrors([
+                'upload' => 'Failed to upload document: '.$e->getMessage(),
+            ])->with('error', 'Upload failed');
         }
     }
 

@@ -61,10 +61,9 @@ describe('Document Upload', function () {
                 'is_public' => false,
             ]);
 
-        $response->assertStatus(201);
-        $response->assertJson([
-            'message' => 'Document uploaded successfully',
-        ]);
+        $response->assertStatus(302);
+        $response->assertRedirect();
+        $response->assertSessionHas('success', 'Document uploaded successfully');
 
         $this->assertDatabaseHas('document', [
             'user_id' => $this->user->id,
@@ -247,13 +246,11 @@ describe('Error Handling', function () {
             ->andThrow(new StorageException('S3 service unavailable'));
 
         $response = $this->actingAs($this->user)
-            ->postJson('/documents', ['file' => $file]);
+            ->post('/documents', ['file' => $file]);
 
-        $response->assertStatus(500);
-        $response->assertJson([
-            'message' => 'Failed to upload document',
-            'error' => 'S3 service unavailable',
-        ]);
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors(['upload']);
+        $response->assertSessionHas('error', 'Upload failed');
     });
 
     test('handles S3 delete failure gracefully', function () {
@@ -292,12 +289,11 @@ describe('Error Handling', function () {
         $this->app->instance(DocumentRepositoryInterface::class, $mockRepo);
 
         $response = $this->actingAs($this->user)
-            ->postJson('/documents', ['file' => $file]);
+            ->post('/documents', ['file' => $file]);
 
-        $response->assertStatus(500);
-        $response->assertJson([
-            'message' => 'Failed to upload document',
-        ]);
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors(['upload']);
+        $response->assertSessionHas('error', 'Upload failed');
     });
 
     test('returns 404 for non-existent document download', function () {
