@@ -41,7 +41,7 @@ if [ -n "$STAGED_PHP_FILES" ]; then
     echo "🔍 Running PHPStan static analysis on staged PHP files..."
     
     # Run PHPStan analysis
-    if ./vendor/bin/phpstan analyse; then
+    if composer analyze; then
         print_status "PHPStan analysis passed"
     else
         print_error "PHPStan analysis failed"

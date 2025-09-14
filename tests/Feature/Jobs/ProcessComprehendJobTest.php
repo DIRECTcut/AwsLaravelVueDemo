@@ -1,6 +1,7 @@
 <?php
 
 use App\Contracts\Aws\TextAnalysisServiceInterface;
+use App\Events\DocumentProcessingStatusUpdated;
 use App\Jobs\ProcessComprehendJob;
 use App\JobStatus;
 use App\Models\Document;
@@ -9,11 +10,14 @@ use App\Models\DocumentProcessingJob;
 use App\Models\User;
 use App\ProcessingStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Mockery;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    Event::fake();
+
     $this->user = User::factory()->create();
     $this->document = Document::factory()->create([
         'user_id' => $this->user->id,
@@ -86,6 +90,30 @@ describe('ProcessComprehendJob', function () {
         $processedData = $result->processed_data;
         expect($processedData['sentiment'])->toBe('POSITIVE');
         expect($processedData['confidence_scores']['Positive'])->toBe(0.85);
+
+        // Check events were dispatched (3 total: start, complete, document completion)
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, 3);
+
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, function ($event) {
+            return $event->document->id === $this->document->id &&
+                   $event->status === ProcessingStatus::PROCESSING &&
+                   $event->message === 'Starting Comprehend analysis' &&
+                   $event->metadata['job_type'] === 'comprehend_sentiment';
+        });
+
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, function ($event) {
+            return $event->document->id === $this->document->id &&
+                   $event->status === ProcessingStatus::PROCESSING &&
+                   $event->message === 'Comprehend analysis completed' &&
+                   $event->metadata['job_type'] === 'comprehend_sentiment';
+        });
+
+        // Third event: document completion since no other jobs are pending
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, function ($event) {
+            return $event->document->id === $this->document->id &&
+                   $event->status === ProcessingStatus::COMPLETED &&
+                   $event->message === 'All document processing completed';
+        });
     });
 
     test('processes entity detection successfully', function () {
@@ -300,6 +328,21 @@ describe('ProcessComprehendJob', function () {
         $processingJob->refresh();
         expect($processingJob->status)->toBe(JobStatus::FAILED);
         expect($processingJob->error_message)->toContain('Comprehend API error');
+
+        // Check events were dispatched
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, 2);
+
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, function ($event) {
+            return $event->document->id === $this->document->id &&
+                   $event->status === ProcessingStatus::PROCESSING &&
+                   $event->message === 'Starting Comprehend analysis';
+        });
+
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, function ($event) {
+            return $event->document->id === $this->document->id &&
+                   $event->status === ProcessingStatus::FAILED &&
+                   str_contains($event->message, 'Comprehend analysis failed');
+        });
     });
 
     test('throws exception for unknown job type', function () {
@@ -360,6 +403,13 @@ describe('ProcessComprehendJob', function () {
         // Document should be marked as completed since all jobs are done
         $this->document->refresh();
         expect($this->document->processing_status)->toBe(ProcessingStatus::COMPLETED);
+
+        // Check completion event was dispatched
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, function ($event) {
+            return $event->document->id === $this->document->id &&
+                   $event->status === ProcessingStatus::COMPLETED &&
+                   $event->message === 'All document processing completed';
+        });
     });
 
     test('does not mark document as completed when jobs still pending', function () {

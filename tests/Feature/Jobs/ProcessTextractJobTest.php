@@ -1,6 +1,7 @@
 <?php
 
 use App\Contracts\Aws\DocumentAnalysisServiceInterface;
+use App\Events\DocumentProcessingStatusUpdated;
 use App\Jobs\ProcessTextractJob;
 use App\JobStatus;
 use App\Models\Document;
@@ -9,11 +10,14 @@ use App\Models\DocumentProcessingJob;
 use App\Models\User;
 use App\ProcessingStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Mockery;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    Event::fake();
+
     $this->user = User::factory()->create();
     $this->document = Document::factory()->create([
         'user_id' => $this->user->id,
@@ -82,6 +86,30 @@ describe('ProcessTextractJob', function () {
         expect($processedData['text_blocks'])->toHaveCount(1);
         expect($processedData['text_blocks'][0]['text'])->toBe('Sample text line');
         expect($processedData['text_blocks'][0]['confidence'])->toBe(95.5);
+
+        // Check events were dispatched (3 total: start, complete, document completion)
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, 3);
+
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, function ($event) {
+            return $event->document->id === $this->document->id &&
+                   $event->status === ProcessingStatus::PROCESSING &&
+                   $event->message === 'Starting Textract analysis' &&
+                   $event->metadata['job_type'] === 'textract_text';
+        });
+
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, function ($event) {
+            return $event->document->id === $this->document->id &&
+                   $event->status === ProcessingStatus::PROCESSING &&
+                   $event->message === 'Textract analysis completed' &&
+                   $event->metadata['job_type'] === 'textract_text';
+        });
+
+        // Third event: document completion since no other jobs are pending
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, function ($event) {
+            return $event->document->id === $this->document->id &&
+                   $event->status === ProcessingStatus::COMPLETED &&
+                   $event->message === 'All document processing completed';
+        });
     });
 
     test('processes textract_analysis job successfully', function () {
@@ -166,6 +194,21 @@ describe('ProcessTextractJob', function () {
         $processingJob->refresh();
         expect($processingJob->status)->toBe(JobStatus::FAILED);
         expect($processingJob->error_message)->toContain('Textract API error');
+
+        // Check events were dispatched
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, 2);
+
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, function ($event) {
+            return $event->document->id === $this->document->id &&
+                   $event->status === ProcessingStatus::PROCESSING &&
+                   $event->message === 'Starting Textract analysis';
+        });
+
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, function ($event) {
+            return $event->document->id === $this->document->id &&
+                   $event->status === ProcessingStatus::FAILED &&
+                   str_contains($event->message, 'Textract analysis failed');
+        });
     });
 
     test('throws exception for unknown job type', function () {
@@ -236,6 +279,13 @@ describe('ProcessTextractJob', function () {
         // Document should be marked as completed since all jobs are done
         $this->document->refresh();
         expect($this->document->processing_status)->toBe(ProcessingStatus::COMPLETED);
+
+        // Check completion event was dispatched
+        Event::assertDispatched(DocumentProcessingStatusUpdated::class, function ($event) {
+            return $event->document->id === $this->document->id &&
+                   $event->status === ProcessingStatus::COMPLETED &&
+                   $event->message === 'All document processing completed';
+        });
     });
 
     test('does not mark document as completed when jobs still pending', function () {

@@ -3,8 +3,10 @@
 namespace App\Jobs;
 
 use App\Contracts\Aws\TextAnalysisServiceInterface;
+use App\Events\DocumentProcessingStatusUpdated;
 use App\Models\DocumentAnalysisResult;
 use App\Models\DocumentProcessingJob;
+use App\ProcessingStatus;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -50,6 +52,13 @@ class ProcessComprehendJob implements ShouldQueue
 
         $processingJob->markAsStarted();
 
+        DocumentProcessingStatusUpdated::dispatch(
+            $document,
+            ProcessingStatus::PROCESSING,
+            'Starting Comprehend analysis',
+            ['job_type' => $processingJob->job_type]
+        );
+
         try {
             // Get document text (from Textract results or direct text)
             $documentText = $this->extractDocumentText($document);
@@ -88,6 +97,13 @@ class ProcessComprehendJob implements ShouldQueue
                 'document_id' => $document->id,
             ]);
 
+            DocumentProcessingStatusUpdated::dispatch(
+                $document,
+                ProcessingStatus::PROCESSING,
+                'Comprehend analysis completed',
+                ['job_type' => $processingJob->job_type]
+            );
+
             // Check if all processing is complete
             $this->checkDocumentProcessingCompletion($document, $logger);
 
@@ -100,6 +116,14 @@ class ProcessComprehendJob implements ShouldQueue
             ]);
 
             $processingJob->markAsFailed($e->getMessage());
+
+            DocumentProcessingStatusUpdated::dispatch(
+                $document,
+                ProcessingStatus::FAILED,
+                'Comprehend analysis failed: '.$e->getMessage(),
+                ['job_type' => $processingJob->job_type]
+            );
+
             throw $e;
         }
     }
@@ -212,6 +236,12 @@ class ProcessComprehendJob implements ShouldQueue
             $document->update(['processing_status' => \App\ProcessingStatus::COMPLETED]);
 
             $logger->info('Document processing completed', ['document_id' => $document->id]);
+
+            DocumentProcessingStatusUpdated::dispatch(
+                $document,
+                ProcessingStatus::COMPLETED,
+                'All document processing completed'
+            );
         }
     }
 

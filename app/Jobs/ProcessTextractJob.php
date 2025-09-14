@@ -3,8 +3,10 @@
 namespace App\Jobs;
 
 use App\Contracts\Aws\DocumentAnalysisServiceInterface;
+use App\Events\DocumentProcessingStatusUpdated;
 use App\Models\DocumentAnalysisResult;
 use App\Models\DocumentProcessingJob;
+use App\ProcessingStatus;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -50,6 +52,13 @@ class ProcessTextractJob implements ShouldQueue
 
         $processingJob->markAsStarted();
 
+        DocumentProcessingStatusUpdated::dispatch(
+            $document,
+            ProcessingStatus::PROCESSING,
+            'Starting Textract analysis',
+            ['job_type' => $processingJob->job_type]
+        );
+
         try {
             // Determine analysis type based on job type
             $results = match ($processingJob->job_type) {
@@ -88,7 +97,7 @@ class ProcessTextractJob implements ShouldQueue
                 'document_id' => $document->id,
                 'analysis_type' => $processingJob->job_type,
                 'raw_results' => $results,
-                'processed_data' => $this->processTextractResults($results, $processingJob->job_type),
+                'processed_data' => $this->processTextractResults($results),
                 'confidence_score' => $this->calculateAverageConfidence($results),
                 'metadata' => $metadata,
             ]);
@@ -99,6 +108,13 @@ class ProcessTextractJob implements ShouldQueue
                 'job_id' => $processingJob->id,
                 'document_id' => $document->id,
             ]);
+
+            DocumentProcessingStatusUpdated::dispatch(
+                $document,
+                ProcessingStatus::PROCESSING,
+                'Textract analysis completed',
+                ['job_type' => $processingJob->job_type, 'confidence' => $metadata['confidence'] ?? null]
+            );
 
             // Check if all processing is complete
             $this->checkDocumentProcessingCompletion($document, $logger);
@@ -112,11 +128,19 @@ class ProcessTextractJob implements ShouldQueue
             ]);
 
             $processingJob->markAsFailed($e->getMessage());
+
+            DocumentProcessingStatusUpdated::dispatch(
+                $document,
+                ProcessingStatus::FAILED,
+                'Textract analysis failed: '.$e->getMessage(),
+                ['job_type' => $processingJob->job_type]
+            );
+
             throw $e;
         }
     }
 
-    private function processTextractResults(array $results, string $jobType): array
+    private function processTextractResults(array $results): array
     {
         $processed = [
             'text_blocks' => [],
@@ -180,6 +204,12 @@ class ProcessTextractJob implements ShouldQueue
             $document->update(['processing_status' => \App\ProcessingStatus::COMPLETED]);
 
             $logger->info('Document processing completed', ['document_id' => $document->id]);
+
+            DocumentProcessingStatusUpdated::dispatch(
+                $document,
+                ProcessingStatus::COMPLETED,
+                'All document processing completed'
+            );
         }
     }
 
