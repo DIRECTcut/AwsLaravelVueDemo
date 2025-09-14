@@ -36,6 +36,20 @@ if [ -n "$STAGED_PHP_FILES" ]; then
     echo "$STAGED_PHP_FILES" | xargs git add
     
     print_status "PHP files formatted and re-staged"
+    
+    echo ""
+    echo "🔍 Running PHPStan static analysis on staged PHP files..."
+    
+    # Run PHPStan analysis
+    if ./vendor/bin/phpstan analyse; then
+        print_status "PHPStan analysis passed"
+    else
+        print_error "PHPStan analysis failed"
+        echo ""
+        echo "Please fix static analysis errors before committing."
+        echo "You can run 'composer analyze' to see the full report."
+        exit 1
+    fi
 fi
 
 # Always run PHP tests if there are any PHP changes

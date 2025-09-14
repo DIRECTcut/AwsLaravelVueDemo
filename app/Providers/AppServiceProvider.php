@@ -74,7 +74,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(DocumentAnalysisServiceInterface::class, function ($app) use ($logger) {
-            if (env('AWS_TEXTRACT_USE_FAKE', false)) {
+            if (config('services.aws.textract.use_fake')) {
                 return new FakeTextractService($logger);
             }
 
@@ -97,7 +97,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(TextAnalysisServiceInterface::class, function ($app) use ($logger) {
-            if (env('AWS_COMPREHEND_USE_FAKE', false)) {
+            if (config('services.aws.comprehend.use_fake')) {
                 return new FakeComprehendService($logger);
             }
 
@@ -155,27 +155,11 @@ class AppServiceProvider extends ServiceProvider
                 throw new \RuntimeException($message);
             }
 
-            return; // Skip connection test if config is missing
+            // Skip connection test if config is missing
+            return;
         }
 
-        $endpoint = config('filesystems.disks.s3.endpoint');
-        if ($endpoint) {
-            // logger()->info('Using custom S3 endpoint', ['endpoint' => $endpoint]);
-        } else {
-            logger()->info('Using default AWS S3 endpoint');
-        }
-
-        // Test actual S3 connection
         $this->testS3Connection();
-
-        // Log if using fake services
-        if (env('AWS_TEXTRACT_USE_FAKE', false)) {
-            // logger()->warning('Using FAKE Textract service - not connecting to real AWS Textract');
-        }
-
-        if (env('AWS_COMPREHEND_USE_FAKE', false)) {
-            // logger()->warning('Using FAKE Comprehend service - not connecting to real AWS Comprehend');
-        }
     }
 
     private function testS3Connection(): void

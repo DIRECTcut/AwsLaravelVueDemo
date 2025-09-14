@@ -37,10 +37,12 @@ return [
 
     'aws' => [
         'textract' => [
+            'use_fake' => env('AWS_TEXTRACT_USE_FAKE', false),
             'notification_role_arn' => env('AWS_TEXTRACT_ROLE_ARN'),
             'sns_topic_arn' => env('AWS_TEXTRACT_SNS_TOPIC_ARN'),
         ],
         'comprehend' => [
+            'use_fake' => env('AWS_COMPREHEND_USE_FAKE', false),
             'data_access_role_arn' => env('AWS_COMPREHEND_ROLE_ARN'),
         ],
     ],
