@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
+use Psr\Log\LoggerInterface;
 
 class ProcessDocumentJob implements ShouldQueue
 {
@@ -29,16 +29,17 @@ class ProcessDocumentJob implements ShouldQueue
 
     public function handle(
         DocumentRepositoryInterface $documentRepository,
-        DocumentProcessorManager $processorManager
+        DocumentProcessorManager $processorManager,
+        LoggerInterface $logger
     ): void {
         $document = $documentRepository->findById($this->documentId);
         
         if (!$document) {
-            Log::error("Document not found for processing", ['document_id' => $this->documentId]);
+            $logger->error("Document not found for processing", ['document_id' => $this->documentId]);
             return;
         }
 
-        Log::info("Starting document processing", [
+        $logger->info("Starting document processing", [
             'document_id' => $document->id,
             'filename' => $document->original_filename,
             'type' => $document->getDocumentType()?->value,
@@ -52,13 +53,13 @@ class ProcessDocumentJob implements ShouldQueue
 
             $this->dispatchJobs($jobs);
 
-            Log::info("Document processing jobs dispatched", [
+            $logger->info("Document processing jobs dispatched", [
                 'document_id' => $document->id,
                 'job_count' => count($jobs),
             ]);
             
         } catch (\Exception $e) {
-            Log::error("Error processing document", [
+            $logger->error("Error processing document", [
                 'document_id' => $document->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -82,7 +83,7 @@ class ProcessDocumentJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
-        Log::error("ProcessDocumentJob failed", [
+        app(LoggerInterface::class)->error("ProcessDocumentJob failed", [
             'document_id' => $this->documentId,
             'error' => $exception->getMessage(),
         ]);

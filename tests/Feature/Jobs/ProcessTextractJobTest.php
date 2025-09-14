@@ -59,7 +59,7 @@ describe('ProcessTextractJob', function () {
             ->andReturn($mockResults);
         
         $job = new ProcessTextractJob($processingJob->id);
-        $job->handle($this->textractService);
+        $job->handle($this->textractService, app('Psr\\Log\\LoggerInterface'));
         
         // Check processing job was updated
         $processingJob->refresh();
@@ -120,7 +120,7 @@ describe('ProcessTextractJob', function () {
             ->andReturn($mockResults);
         
         $job = new ProcessTextractJob($processingJob->id);
-        $job->handle($this->textractService);
+        $job->handle($this->textractService, app('Psr\\Log\\LoggerInterface'));
         
         // Check processing job was updated
         $processingJob->refresh();
@@ -140,7 +140,7 @@ describe('ProcessTextractJob', function () {
     
     test('handles non-existent processing job gracefully', function () {
         $job = new ProcessTextractJob(999);
-        $job->handle($this->textractService);
+        $job->handle($this->textractService, app('Psr\\Log\\LoggerInterface'));
         
         // Should not create any analysis results
         expect(DocumentAnalysisResult::count())->toBe(0);
@@ -159,7 +159,7 @@ describe('ProcessTextractJob', function () {
         
         expect(function () use ($processingJob) {
             $job = new ProcessTextractJob($processingJob->id);
-            $job->handle($this->textractService);
+            $job->handle($this->textractService, app('Psr\\Log\\LoggerInterface'));
         })->toThrow(\Exception::class);
         
         // Check processing job was marked as failed
@@ -177,7 +177,7 @@ describe('ProcessTextractJob', function () {
         
         expect(function () use ($processingJob) {
             $job = new ProcessTextractJob($processingJob->id);
-            $job->handle($this->textractService);
+            $job->handle($this->textractService, app('Psr\\Log\\LoggerInterface'));
         })->toThrow(\InvalidArgumentException::class);
     });
     
@@ -203,7 +203,7 @@ describe('ProcessTextractJob', function () {
             ->andReturn($mockResults);
         
         $job = new ProcessTextractJob($processingJob->id);
-        $job->handle($this->textractService);
+        $job->handle($this->textractService, app('Psr\\Log\\LoggerInterface'));
         
         $result = DocumentAnalysisResult::where('document_id', $this->document->id)->first();
         
@@ -231,7 +231,7 @@ describe('ProcessTextractJob', function () {
             ->andReturn(['Blocks' => [], 'ResponseMetadata' => []]);
         
         $job = new ProcessTextractJob($processingJob->id);
-        $job->handle($this->textractService);
+        $job->handle($this->textractService, app('Psr\\Log\\LoggerInterface'));
         
         // Document should be marked as completed since all jobs are done
         $this->document->refresh();
@@ -257,7 +257,7 @@ describe('ProcessTextractJob', function () {
             ->andReturn(['Blocks' => [], 'ResponseMetadata' => []]);
         
         $job = new ProcessTextractJob($processingJob->id);
-        $job->handle($this->textractService);
+        $job->handle($this->textractService, app('Psr\\Log\\LoggerInterface'));
         
         // Document should still be processing since other jobs are pending
         $this->document->refresh();

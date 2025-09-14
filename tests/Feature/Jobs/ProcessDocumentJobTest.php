@@ -28,7 +28,8 @@ describe('ProcessDocumentJob', function () {
         $job = new ProcessDocumentJob($document->id);
         $job->handle(
             app('App\\Contracts\\Repositories\\DocumentRepositoryInterface'),
-            app('App\\Services\\Processing\\DocumentProcessorManager')
+            app('App\\Services\\Processing\\DocumentProcessorManager'),
+            app('Psr\\Log\\LoggerInterface')
         );
         
         // Check that processing jobs were created (only Textract for images)
@@ -46,7 +47,8 @@ describe('ProcessDocumentJob', function () {
         $job = new ProcessDocumentJob(999);
         $job->handle(
             app('App\\Contracts\\Repositories\\DocumentRepositoryInterface'),
-            app('App\\Services\\Processing\\DocumentProcessorManager')
+            app('App\\Services\\Processing\\DocumentProcessorManager'),
+            app('Psr\\Log\\LoggerInterface')
         );
         
         // Should not create any processing jobs
@@ -65,7 +67,8 @@ describe('ProcessDocumentJob', function () {
         expect(function () use ($job) {
             $job->handle(
                 app('App\\Contracts\\Repositories\\DocumentRepositoryInterface'),
-                app('App\\Services\\Processing\\DocumentProcessorManager')
+                app('App\\Services\\Processing\\DocumentProcessorManager'),
+                app('Psr\\Log\\LoggerInterface')
             );
         })->toThrow(\RuntimeException::class, 'No processor available for document type: application/unknown');
         

@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
+use Psr\Log\LoggerInterface;
 
 class ProcessComprehendJob implements ShouldQueue
 {
@@ -23,22 +23,23 @@ class ProcessComprehendJob implements ShouldQueue
     ) {}
 
     public function handle(
-        TextAnalysisServiceInterface $comprehendService
+        TextAnalysisServiceInterface $comprehendService,
+        LoggerInterface $logger
     ): void {
         $processingJob = DocumentProcessingJob::find($this->processingJobId);
         
         if (!$processingJob) {
-            Log::error("Processing job not found", ['job_id' => $this->processingJobId]);
+            $logger->error("Processing job not found", ['job_id' => $this->processingJobId]);
             return;
         }
 
         $document = $processingJob->document;
         if (!$document) {
-            Log::error("Document not found for processing job", ['job_id' => $this->processingJobId]);
+            $logger->error("Document not found for processing job", ['job_id' => $this->processingJobId]);
             return;
         }
 
-        Log::info("Starting Comprehend processing", [
+        $logger->info("Starting Comprehend processing", [
             'job_id' => $processingJob->id,
             'document_id' => $document->id,
             'job_type' => $processingJob->job_type,
@@ -79,16 +80,16 @@ class ProcessComprehendJob implements ShouldQueue
 
             $processingJob->markAsCompleted($results);
 
-            Log::info("Comprehend processing completed", [
+            $logger->info("Comprehend processing completed", [
                 'job_id' => $processingJob->id,
                 'document_id' => $document->id,
             ]);
 
             // Check if all processing is complete
-            $this->checkDocumentProcessingCompletion($document);
+            $this->checkDocumentProcessingCompletion($document, $logger);
 
         } catch (\Exception $e) {
-            Log::error("Comprehend processing failed", [
+            $logger->error("Comprehend processing failed", [
                 'job_id' => $processingJob->id,
                 'document_id' => $document->id,
                 'error' => $e->getMessage(),
@@ -185,7 +186,7 @@ class ProcessComprehendJob implements ShouldQueue
         return max($scores);
     }
 
-    private function checkDocumentProcessingCompletion($document): void
+    private function checkDocumentProcessingCompletion($document, LoggerInterface $logger): void
     {
         $pendingJobs = $document->processingJobs()
             ->whereIn('status', [\App\JobStatus::PENDING, \App\JobStatus::PROCESSING])
@@ -194,13 +195,13 @@ class ProcessComprehendJob implements ShouldQueue
         if ($pendingJobs === 0) {
             $document->update(['processing_status' => \App\ProcessingStatus::COMPLETED]);
             
-            Log::info("Document processing completed", ['document_id' => $document->id]);
+            $logger->info("Document processing completed", ['document_id' => $document->id]);
         }
     }
 
     public function failed(\Throwable $exception): void
     {
-        Log::error("ProcessComprehendJob failed", [
+        app(LoggerInterface::class)->error("ProcessComprehendJob failed", [
             'processing_job_id' => $this->processingJobId,
             'error' => $exception->getMessage(),
         ]);
