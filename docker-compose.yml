@@ -19,7 +19,6 @@ services:
       timeout: 20s
       retries: 3
 
-  # MinIO client to create initial bucket
   minio-init:
     image: minio/mc:latest
     depends_on:
@@ -33,7 +32,6 @@ services:
       echo 'MinIO bucket created successfully';
       "
 
-  # Redis for queues and caching
   redis:
     image: redis:7-alpine
     ports:
@@ -42,21 +40,6 @@ services:
     volumes:
       - redis_data:/data
 
-  # MySQL database (optional - can still use SQLite)
-  mysql:
-    image: mysql:8.0
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: laravel_documents
-      MYSQL_USER: laravel
-      MYSQL_PASSWORD: password
-    volumes:
-      - mysql_data:/var/lib/mysql
-    command: --default-authentication-plugin=mysql_native_password
-
-  # Soketi - Local Pusher-compatible WebSocket server
   soketi:
     image: quay.io/soketi/soketi:1.6-16-alpine
     ports:

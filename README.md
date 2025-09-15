@@ -82,7 +82,6 @@ php artisan tinker
   - Credentials: `laravel` / `password123`
   - Bucket: `laravel-documents`
 - **Redis**: localhost:6379
-- **MySQL**: localhost:3306 (`laravel` / `password`)
 
 ### Testing
 ```bash
@@ -127,3 +126,4 @@ tests/
 ## TODO
 
 1. Ensure FakeComprehendService, FakeTextractService are consistent with actual AWS inputs-outputs, test
+2. Prod/staging deployment guide, configs, Dockerfile?
