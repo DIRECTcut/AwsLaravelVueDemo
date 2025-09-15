@@ -125,6 +125,7 @@ tests/
 
 ## TODO
 
-1. Ensure FakeComprehendService, FakeTextractService are consistent with actual AWS inputs-outputs, test
+1. ComprehendService, TextractService: create a script to capture real AWS responses and save in fixtures, create a test suite, run in CI periodically
 2. Prod/staging deployment guide, configs, Dockerfile?
 3. Setup CI checks: run tests, formating, linting
+4. Setup Redis for cache, sessions, queues
