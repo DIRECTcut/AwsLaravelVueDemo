@@ -226,6 +226,14 @@ function changePage(page: number) {
                                 <span v-if="document.tags.length > 2" class="text-muted-foreground"> +{{ document.tags.length - 2 }} more </span>
                             </div>
                         </div>
+
+                        <!-- Simple processing status display -->
+                        <div v-if="document.processing_status === 'processing'" class="mt-3">
+                            <div class="flex items-center gap-2 text-sm text-blue-600">
+                                <Loader2 class="h-4 w-4 animate-spin" />
+                                <span>Processing document...</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Actions -->

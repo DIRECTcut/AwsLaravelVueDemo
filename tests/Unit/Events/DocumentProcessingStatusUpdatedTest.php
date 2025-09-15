@@ -30,11 +30,9 @@ class DocumentProcessingStatusUpdatedTest extends TestCase
         $channels = $event->broadcastOn();
 
         // Assert
-        $this->assertCount(2, $channels);
+        $this->assertCount(1, $channels);
         $this->assertInstanceOf(PrivateChannel::class, $channels[0]);
-        $this->assertInstanceOf(PrivateChannel::class, $channels[1]);
         $this->assertEquals("private-user.{$user->id}", $channels[0]->name);
-        $this->assertEquals("private-document.{$document->id}", $channels[1]->name);
     }
 
     public function test_event_includes_correct_broadcast_data(): void

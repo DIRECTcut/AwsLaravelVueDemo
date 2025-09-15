@@ -6,11 +6,11 @@ use App\Models\Document;
 use App\ProcessingStatus;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class DocumentProcessingStatusUpdated implements ShouldBroadcast
+class DocumentProcessingStatusUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -28,7 +28,6 @@ class DocumentProcessingStatusUpdated implements ShouldBroadcast
     {
         return [
             new PrivateChannel("user.{$this->document->user_id}"),
-            new PrivateChannel("document.{$this->document->id}"),
         ];
     }
 
