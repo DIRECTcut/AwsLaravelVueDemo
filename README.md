@@ -113,8 +113,9 @@ resources/js/
 └── composables/       # Shared logic
 
 tests/
-├── Feature/           # Integration tests
-└── Unit/             # Unit tests
+├── Feature/           # Backend Integration tests
+├── frontend/          # Frontend tests
+└── Unit/              # Backend Unit tests
 ```
 
 ## AWS Services Used
@@ -126,6 +127,9 @@ tests/
 ## TODO
 
 1. ComprehendService, TextractService: create a script to capture real AWS responses and save in fixtures, create a test suite, run in CI periodically
-2. Prod/staging deployment guide, configs, Dockerfile?
+2. Prod/staging deployment guide, configs, Dockerfile.
 3. Setup CI checks: run tests, formating, linting
 4. Setup Redis for cache, sessions, queues
+5. Setup log collection (fluentd+Loki) 
+6. Create IaC (Terraform)
+7. E2E Tests (Cypress)
