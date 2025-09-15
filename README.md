@@ -123,10 +123,6 @@ tests/
 - **S3**: Document storage and retrieval
 - **Textract**: OCR and document analysis
 - **Comprehend**: Text analysis and sentiment detection
-- **SQS**: Asynchronous job processing
-- **SNS**: Event notifications
-- **CloudFront**: CDN for document delivery
-- **IAM**: Access control and security
 
 ## TODO
 
