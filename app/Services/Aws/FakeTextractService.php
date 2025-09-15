@@ -21,7 +21,6 @@ class FakeTextractService implements DocumentAnalysisServiceInterface
         sleep(2);
 
         return [
-            'text' => "This is fake extracted text from the document.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit.\nThis simulates OCR text extraction for development.",
             'Blocks' => [
                 [
                     'Text' => 'This is fake extracted text from the document.',
@@ -39,8 +38,6 @@ class FakeTextractService implements DocumentAnalysisServiceInterface
                     'BlockType' => 'LINE',
                 ],
             ],
-            'confidence' => 98.5,
-            'page_count' => 1,
         ];
     }
 
@@ -55,16 +52,18 @@ class FakeTextractService implements DocumentAnalysisServiceInterface
         sleep(1);
 
         $result = [
-            'text' => "Document Analysis Results (Fake)\n\nExtracted text from document analysis.",
             'Blocks' => [
                 [
                     'Text' => 'Document Analysis Results (Fake)',
                     'Confidence' => 99.2,
                     'BlockType' => 'LINE',
                 ],
+                [
+                    'Text' => 'Extracted text from document analysis.',
+                    'Confidence' => 98.8,
+                    'BlockType' => 'LINE',
+                ],
             ],
-            'confidence' => 98.8,
-            'page_count' => 1,
         ];
 
         if (in_array('TABLES', $featureTypes)) {
@@ -114,17 +113,19 @@ class FakeTextractService implements DocumentAnalysisServiceInterface
 
         // Simulate job completion
         return [
-            'status' => 'SUCCEEDED',
-            'text' => "Async text detection complete (Fake).\n\nThis is the extracted text from async processing.",
+            'JobStatus' => 'SUCCEEDED',
             'Blocks' => [
                 [
                     'Text' => 'Async text detection complete (Fake).',
                     'Confidence' => 99.0,
                     'BlockType' => 'LINE',
                 ],
+                [
+                    'Text' => 'This is the extracted text from async processing.',
+                    'Confidence' => 98.5,
+                    'BlockType' => 'LINE',
+                ],
             ],
-            'confidence' => 98.5,
-            'page_count' => 1,
         ];
     }
 

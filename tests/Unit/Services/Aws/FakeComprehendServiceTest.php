@@ -34,17 +34,17 @@ describe('Sentiment Detection', function () {
 
         // Assert
         expect($result)->toBeArray()
-            ->toHaveKey('sentiment', 'POSITIVE')
-            ->toHaveKey('scores');
+            ->toHaveKey('Sentiment', 'POSITIVE')
+            ->toHaveKey('SentimentScore');
 
-        expect($result['scores'])->toBeArray()
-            ->toHaveKeys(['positive', 'negative', 'neutral', 'mixed']);
+        expect($result['SentimentScore'])->toBeArray()
+            ->toHaveKeys(['Positive', 'Negative', 'Neutral', 'Mixed']);
 
         // Verify scores are valid probabilities
-        expect($result['scores']['positive'])->toBeFloat()->toBeBetween(0, 1);
-        expect($result['scores']['negative'])->toBeFloat()->toBeBetween(0, 1);
-        expect($result['scores']['neutral'])->toBeFloat()->toBeBetween(0, 1);
-        expect($result['scores']['mixed'])->toBeFloat()->toBeBetween(0, 1);
+        expect($result['SentimentScore']['Positive'])->toBeFloat()->toBeBetween(0, 1);
+        expect($result['SentimentScore']['Negative'])->toBeFloat()->toBeBetween(0, 1);
+        expect($result['SentimentScore']['Neutral'])->toBeFloat()->toBeBetween(0, 1);
+        expect($result['SentimentScore']['Mixed'])->toBeFloat()->toBeBetween(0, 1);
     });
 
     test('detectSentiment accepts language code parameter', function () {
@@ -60,7 +60,7 @@ describe('Sentiment Detection', function () {
         $result = $this->service->detectSentiment($sampleText, $languageCode);
 
         // Assert
-        expect($result)->toBeArray()->toHaveKey('sentiment');
+        expect($result)->toBeArray()->toHaveKey('Sentiment');
     });
 });
 
@@ -76,15 +76,15 @@ describe('Entity Detection', function () {
         // Assert
         expect($result)->toBeArray();
 
-        foreach ($result as $entity) {
+        foreach ($result['Entities'] as $entity) {
             expect($entity)->toBeArray()
-                ->toHaveKeys(['text', 'type', 'score', 'begin_offset', 'end_offset']);
+                ->toHaveKeys(['Text', 'Type', 'Score', 'BeginOffset', 'EndOffset']);
 
-            expect($entity['text'])->toBeString();
-            expect($entity['type'])->toBeString();
-            expect($entity['score'])->toBeFloat()->toBeBetween(0, 1);
-            expect($entity['begin_offset'])->toBeInt()->toBeGreaterThanOrEqual(0);
-            expect($entity['end_offset'])->toBeInt()->toBeGreaterThanOrEqual($entity['begin_offset']);
+            expect($entity['Text'])->toBeString();
+            expect($entity['Type'])->toBeString();
+            expect($entity['Score'])->toBeFloat()->toBeBetween(0, 1);
+            expect($entity['BeginOffset'])->toBeInt()->toBeGreaterThanOrEqual(0);
+            expect($entity['EndOffset'])->toBeInt()->toBeGreaterThanOrEqual($entity['BeginOffset']);
         }
     });
 
@@ -117,14 +117,14 @@ describe('Key Phrase Detection', function () {
         // Assert
         expect($result)->toBeArray();
 
-        foreach ($result as $phrase) {
+        foreach ($result['KeyPhrases'] as $phrase) {
             expect($phrase)->toBeArray()
-                ->toHaveKeys(['text', 'score', 'begin_offset', 'end_offset']);
+                ->toHaveKeys(['Text', 'Score', 'BeginOffset', 'EndOffset']);
 
-            expect($phrase['text'])->toBeString();
-            expect($phrase['score'])->toBeFloat()->toBeBetween(0, 1);
-            expect($phrase['begin_offset'])->toBeInt()->toBeGreaterThanOrEqual(0);
-            expect($phrase['end_offset'])->toBeInt()->toBeGreaterThanOrEqual($phrase['begin_offset']);
+            expect($phrase['Text'])->toBeString();
+            expect($phrase['Score'])->toBeFloat()->toBeBetween(0, 1);
+            expect($phrase['BeginOffset'])->toBeInt()->toBeGreaterThanOrEqual(0);
+            expect($phrase['EndOffset'])->toBeInt()->toBeGreaterThanOrEqual($phrase['BeginOffset']);
         }
     });
 
@@ -214,7 +214,8 @@ describe('Batch Job Operations', function () {
             ->toHaveKeys(['status', 'entities']);
 
         expect($result['status'])->toBe('COMPLETED');
-        expect($result['entities'])->toBeArray();
+        expect($result['entities'])->toBeArray()
+            ->toHaveKey('Entities');
     });
 
     test('describeSentimentDetectionJob returns valid structure', function () {
@@ -230,7 +231,7 @@ describe('Batch Job Operations', function () {
             ->toHaveKeys(['status', 'sentiment']);
 
         expect($result['status'])->toBe('COMPLETED');
-        expect($result['sentiment'])->toBeArray()->toHaveKey('sentiment');
+        expect($result['sentiment'])->toBeArray()->toHaveKey('Sentiment');
     });
 });
 
@@ -242,26 +243,26 @@ describe('Data Structure Consistency', function () {
 
         // Act & Assert - Test sentiment structure matches AWS format
         $sentiment = $this->service->detectSentiment($testText);
-        expect($sentiment)->toHaveKeys(['sentiment', 'scores']);
-        expect($sentiment['sentiment'])->toBeString();
-        expect($sentiment['scores'])->toBeArray();
+        expect($sentiment)->toHaveKeys(['Sentiment', 'SentimentScore']);
+        expect($sentiment['Sentiment'])->toBeString();
+        expect($sentiment['SentimentScore'])->toBeArray();
 
         // Act & Assert - Test entities structure matches AWS format
         $entities = $this->service->detectEntities($testText);
-        expect($entities[0])->toHaveKeys(['text', 'type', 'score', 'begin_offset', 'end_offset']);
-        expect($entities[0]['text'])->toBeString();
-        expect($entities[0]['type'])->toBeString();
-        expect($entities[0]['score'])->toBeFloat();
-        expect($entities[0]['begin_offset'])->toBeInt();
-        expect($entities[0]['end_offset'])->toBeInt();
+        expect($entities['Entities'][0])->toHaveKeys(['Text', 'Type', 'Score', 'BeginOffset', 'EndOffset']);
+        expect($entities['Entities'][0]['Text'])->toBeString();
+        expect($entities['Entities'][0]['Type'])->toBeString();
+        expect($entities['Entities'][0]['Score'])->toBeFloat();
+        expect($entities['Entities'][0]['BeginOffset'])->toBeInt();
+        expect($entities['Entities'][0]['EndOffset'])->toBeInt();
 
         // Act & Assert - Test key phrases structure matches AWS format
         $phrases = $this->service->detectKeyPhrases($testText);
-        expect($phrases[0])->toHaveKeys(['text', 'score', 'begin_offset', 'end_offset']);
-        expect($phrases[0]['text'])->toBeString();
-        expect($phrases[0]['score'])->toBeFloat();
-        expect($phrases[0]['begin_offset'])->toBeInt();
-        expect($phrases[0]['end_offset'])->toBeInt();
+        expect($phrases['KeyPhrases'][0])->toHaveKeys(['Text', 'Score', 'BeginOffset', 'EndOffset']);
+        expect($phrases['KeyPhrases'][0]['Text'])->toBeString();
+        expect($phrases['KeyPhrases'][0]['Score'])->toBeFloat();
+        expect($phrases['KeyPhrases'][0]['BeginOffset'])->toBeInt();
+        expect($phrases['KeyPhrases'][0]['EndOffset'])->toBeInt();
 
         // Act & Assert - Test language detection structure matches AWS format
         $languages = $this->service->detectLanguage($testText);

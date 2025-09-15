@@ -21,12 +21,12 @@ class FakeComprehendService implements TextAnalysisServiceInterface
         sleep(1);
 
         return [
-            'sentiment' => 'POSITIVE',
-            'scores' => [
-                'positive' => 0.75,
-                'negative' => 0.10,
-                'neutral' => 0.12,
-                'mixed' => 0.03,
+            'Sentiment' => 'POSITIVE',
+            'SentimentScore' => [
+                'Positive' => 0.75,
+                'Negative' => 0.10,
+                'Neutral' => 0.12,
+                'Mixed' => 0.03,
             ],
         ];
     }
@@ -41,26 +41,28 @@ class FakeComprehendService implements TextAnalysisServiceInterface
         sleep(1);
 
         return [
-            [
-                'text' => 'John Doe',
-                'type' => 'PERSON',
-                'score' => 0.98,
-                'begin_offset' => 0,
-                'end_offset' => 8,
-            ],
-            [
-                'text' => 'Sample Company',
-                'type' => 'ORGANIZATION',
-                'score' => 0.95,
-                'begin_offset' => 20,
-                'end_offset' => 34,
-            ],
-            [
-                'text' => '2025-09-14',
-                'type' => 'DATE',
-                'score' => 0.99,
-                'begin_offset' => 50,
-                'end_offset' => 60,
+            'Entities' => [
+                [
+                    'Text' => 'John Doe',
+                    'Type' => 'PERSON',
+                    'Score' => 0.98,
+                    'BeginOffset' => 0,
+                    'EndOffset' => 8,
+                ],
+                [
+                    'Text' => 'Sample Company',
+                    'Type' => 'ORGANIZATION',
+                    'Score' => 0.95,
+                    'BeginOffset' => 20,
+                    'EndOffset' => 34,
+                ],
+                [
+                    'Text' => '2025-09-14',
+                    'Type' => 'DATE',
+                    'Score' => 0.99,
+                    'BeginOffset' => 50,
+                    'EndOffset' => 60,
+                ],
             ],
         ];
     }
@@ -73,23 +75,25 @@ class FakeComprehendService implements TextAnalysisServiceInterface
         ]);
 
         return [
-            [
-                'text' => 'document processing',
-                'score' => 0.98,
-                'begin_offset' => 10,
-                'end_offset' => 29,
-            ],
-            [
-                'text' => 'machine learning',
-                'score' => 0.95,
-                'begin_offset' => 35,
-                'end_offset' => 51,
-            ],
-            [
-                'text' => 'artificial intelligence',
-                'score' => 0.92,
-                'begin_offset' => 60,
-                'end_offset' => 83,
+            'KeyPhrases' => [
+                [
+                    'Text' => 'document processing',
+                    'Score' => 0.98,
+                    'BeginOffset' => 10,
+                    'EndOffset' => 29,
+                ],
+                [
+                    'Text' => 'machine learning',
+                    'Score' => 0.95,
+                    'BeginOffset' => 35,
+                    'EndOffset' => 51,
+                ],
+                [
+                    'Text' => 'artificial intelligence',
+                    'Score' => 0.92,
+                    'BeginOffset' => 60,
+                    'EndOffset' => 83,
+                ],
             ],
         ];
     }

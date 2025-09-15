@@ -127,3 +127,7 @@ tests/
 - **SNS**: Event notifications
 - **CloudFront**: CDN for document delivery
 - **IAM**: Access control and security
+
+## TODO
+
+1. Ensure FakeComprehendService, FakeTextractService are consistent with actual AWS inputs-outputs, test

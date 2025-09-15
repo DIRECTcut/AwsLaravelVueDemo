@@ -35,12 +35,9 @@ describe('Document Text Detection', function () {
 
         // Assert
         expect($result)->toBeArray()
-            ->toHaveKeys(['text', 'Blocks', 'confidence', 'page_count']);
+            ->toHaveKey('Blocks');
 
-        expect($result['text'])->toBeString();
         expect($result['Blocks'])->toBeArray();
-        expect($result['confidence'])->toBeFloat()->toBeBetween(0, 100);
-        expect($result['page_count'])->toBeInt()->toBeGreaterThan(0);
     });
 
     test('detectDocumentText blocks have correct structure', function () {
@@ -78,7 +75,7 @@ describe('Document Analysis', function () {
 
         // Assert
         expect($result)->toBeArray()
-            ->toHaveKeys(['text', 'Blocks', 'confidence', 'page_count', 'tables', 'forms']);
+            ->toHaveKeys(['Blocks', 'tables', 'forms']);
     });
 
     test('analyzeDocument returns tables when TABLES feature requested', function () {
@@ -169,9 +166,9 @@ describe('Asynchronous Operations', function () {
 
         // Assert
         expect($result)->toBeArray()
-            ->toHaveKeys(['status', 'text', 'Blocks', 'confidence', 'page_count']);
+            ->toHaveKeys(['JobStatus', 'Blocks']);
 
-        expect($result['status'])->toBe('SUCCEEDED');
+        expect($result['JobStatus'])->toBe('SUCCEEDED');
     });
 
     test('startDocumentAnalysis returns job ID', function () {
@@ -198,7 +195,7 @@ describe('Asynchronous Operations', function () {
 
         // Assert
         expect($result)->toBeArray()
-            ->toHaveKeys(['text', 'Blocks', 'confidence', 'page_count']);
+            ->toHaveKey('Blocks');
     });
 });
 
