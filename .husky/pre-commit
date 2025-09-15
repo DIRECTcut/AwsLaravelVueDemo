@@ -97,6 +97,19 @@ if [ -n "$STAGED_JS_TS_VUE_FILES" ]; then
         echo "$STAGED_JS_TS_VUE_FILES" | xargs git add
         print_status "Frontend files formatted and re-staged"
     fi
+    
+    echo ""
+    echo "🧪 Running frontend tests..."
+    
+    if npm test -- --run; then
+        print_status "Frontend tests passed"
+    else
+        print_error "Frontend tests failed"
+        echo ""
+        echo "Please fix failing frontend tests before committing."
+        echo "You can run 'npm test' to run the tests locally."
+        exit 1
+    fi
 fi
 
 # If no relevant files are staged, inform the user

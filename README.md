@@ -127,3 +127,4 @@ tests/
 
 1. Ensure FakeComprehendService, FakeTextractService are consistent with actual AWS inputs-outputs, test
 2. Prod/staging deployment guide, configs, Dockerfile?
+3. Setup CI checks: run tests, formating, linting
