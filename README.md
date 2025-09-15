@@ -133,3 +133,4 @@ tests/
 5. Setup log collection (fluentd+Loki) 
 6. Create IaC (Terraform)
 7. E2E Tests (Cypress)
+8. DevExperience: setup [laravel-typescript-transformer](https://github.com/spatie/laravel-typescript-transformer) for full-stack type safety
