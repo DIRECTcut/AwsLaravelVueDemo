@@ -18,6 +18,8 @@ class FakeTextractService implements DocumentAnalysisServiceInterface
             's3_bucket' => $s3Bucket,
         ]);
 
+        sleep(2);
+
         return [
             'text' => "This is fake extracted text from the document.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit.\nThis simulates OCR text extraction for development.",
             'Blocks' => [
@@ -49,6 +51,8 @@ class FakeTextractService implements DocumentAnalysisServiceInterface
             's3_bucket' => $s3Bucket,
             'feature_types' => $featureTypes,
         ]);
+
+        sleep(1);
 
         $result = [
             'text' => "Document Analysis Results (Fake)\n\nExtracted text from document analysis.",

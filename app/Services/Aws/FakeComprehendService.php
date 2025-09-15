@@ -18,6 +18,8 @@ class FakeComprehendService implements TextAnalysisServiceInterface
             'language_code' => $languageCode,
         ]);
 
+        sleep(1);
+
         return [
             'sentiment' => 'POSITIVE',
             'scores' => [
@@ -35,6 +37,8 @@ class FakeComprehendService implements TextAnalysisServiceInterface
             'text_length' => strlen($text),
             'language_code' => $languageCode,
         ]);
+
+        sleep(1);
 
         return [
             [
