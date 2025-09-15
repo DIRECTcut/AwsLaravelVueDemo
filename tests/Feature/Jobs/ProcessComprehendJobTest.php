@@ -11,7 +11,6 @@ use App\Models\User;
 use App\ProcessingStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-use Mockery;
 
 uses(RefreshDatabase::class);
 

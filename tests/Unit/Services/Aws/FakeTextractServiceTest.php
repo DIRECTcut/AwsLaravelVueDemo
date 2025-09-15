@@ -2,7 +2,6 @@
 
 use App\Contracts\Aws\DocumentAnalysisServiceInterface;
 use App\Services\Aws\FakeTextractService;
-use Mockery;
 use Psr\Log\LoggerInterface;
 
 beforeEach(function () {

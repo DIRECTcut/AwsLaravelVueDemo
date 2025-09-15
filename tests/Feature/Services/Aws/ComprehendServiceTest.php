@@ -6,7 +6,6 @@ use Aws\Comprehend\ComprehendClient;
 use Aws\Exception\AwsException;
 use Aws\Result;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Mockery;
 
 uses(RefreshDatabase::class);
 

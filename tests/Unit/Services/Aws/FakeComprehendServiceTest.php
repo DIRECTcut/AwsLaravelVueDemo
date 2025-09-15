@@ -2,7 +2,6 @@
 
 use App\Contracts\Aws\TextAnalysisServiceInterface;
 use App\Services\Aws\FakeComprehendService;
-use Mockery;
 use Psr\Log\LoggerInterface;
 
 beforeEach(function () {

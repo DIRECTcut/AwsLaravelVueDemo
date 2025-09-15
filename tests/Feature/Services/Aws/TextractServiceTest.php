@@ -6,7 +6,6 @@ use Aws\Exception\AwsException;
 use Aws\Result;
 use Aws\Textract\TextractClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Mockery;
 
 uses(RefreshDatabase::class);
 
